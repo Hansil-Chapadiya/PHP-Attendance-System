@@ -1,7 +1,7 @@
 <?php
 session_start();
 header("Content-Type: application/json"); // Set header to return JSON responses
-include './api/db_connect.php';  // Database connection file
+include '../backend/db_connect.php';  // Database connection file
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve the input data
@@ -42,4 +42,3 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Invalid request method
     echo json_encode(['status' => 'error', 'message' => 'Invalid Request Method. Use POST']);
 }
-?>
