@@ -1,7 +1,7 @@
 <?php
 session_start();
 header("Content-Type: application/json"); // Set header to return JSON responses
-include '../db_connect.php';  // Database connection file
+include './db_connect.php';  // Database connection file
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve the input data
