@@ -1,0 +1,23 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "index.php",
+        "use": "@vercel/php"
+      },
+      {
+        "src": "backend/student_api/*.php",
+        "use": "@vercel/php"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/student/login",
+        "dest": "/index.php"
+      },
+      {
+        "src": "/student/register",
+        "dest": "/index.php"
+      }
+    ]
+  }
