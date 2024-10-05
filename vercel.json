@@ -1,15 +1,21 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "Dockerfile",
-        "use": "@vercel/docker"
-      }
-    ],
+    "functions": {
+        "backend/student_api/*.php": {
+            "runtime": "vercel-php@0.5.2"
+        }
+    },
     "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/"
-      }
+        {
+            "src": "/student/login",
+            "dest": "/backend/student_api/stud_login.php"
+        },
+        {
+            "src": "/student/register",
+            "dest": "/backend/student_api/stud_register.php"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/index.php"
+        }
     ]
-  }
+}
