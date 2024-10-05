@@ -1,17 +1,18 @@
 {
+    "version": 2,
     "functions": {
-        "backend/student_api/*.php": {
+        "api/**/*.php": {
             "runtime": "vercel-php@0.5.2"
         }
     },
     "routes": [
         {
             "src": "/student/login",
-            "dest": "/backend/student_api/stud_login.php"
+            "dest": "/api/stud_login.php"
         },
         {
             "src": "/student/register",
-            "dest": "/backend/student_api/stud_register.php"
+            "dest": "/api/stud_register.php"
         },
         {
             "src": "/(.*)",
