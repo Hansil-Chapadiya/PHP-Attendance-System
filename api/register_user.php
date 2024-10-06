@@ -1,30 +1,36 @@
 <?php
+header("Content-Type: application/json"); // Set response type to JSON
 session_start();
-include __DIR__ . '/../backend/db_connect.php'; // Database connection file
+include __DIR__ . '/../backend/db_connect.php'; // Include database connection file
+
+// Function to get client IP address
 function getClientIP()
 {
     if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
         return $_SERVER['HTTP_CLIENT_IP'];
     }
     if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        // Explode the IPs to get the first one
         $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
         return trim($ipList[0]);
     }
     return $_SERVER['REMOTE_ADDR'];
 }
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Get raw POST data
+    $postData = file_get_contents("php://input");
+    $data = json_decode($postData, true); // Decode the JSON data
+
     // Check if all required fields are set
-    if (isset($_POST['username']) && isset($_POST['password']) && isset($_POST['full_name']) && isset($_POST['role']) && isset($_POST['branch'])) {
-
+    if (isset($data['username'], $data['password'], $data['full_name'], $data['role'], $data['branch'])) {
         // Retrieve form data
-        $username = $_POST['username'];
-        $password = $_POST['password'];
-        $full_name = $_POST['full_name'];
-        $role = $_POST['role']; // e.g., 'student'
-        $branch = $_POST['branch']; // e.g., 'IT'
+        $username = $data['username'];
+        $password = $data['password'];
+        $full_name = $data['full_name'];
+        $role = $data['role'];
+        $branch = $data['branch'];
 
-        // Validate username and password (example: non-empty and unique username)
+        // Validate input fields
         if (empty($username) || empty($password) || empty($full_name) || empty($role) || empty($branch)) {
             echo json_encode(['status' => 'error', 'message' => 'All fields are required']);
             exit;
@@ -42,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         // Get the user's IP address
-        // $ip_address = $_SERVER['REMOTE_ADDR'];
         $ip_address = getClientIP();
 
         // Insert the new user into the database, including the IP address
@@ -57,4 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Username, password, full name, role, and branch are required']);
     }
+} else {
+    // If request method is not POST
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
 }
