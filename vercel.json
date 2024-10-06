@@ -12,7 +12,7 @@
         },
         {
             "src": "/student/register",
-            "dest": "/api/stud_register.php"
+            "dest": "/api/register_user.php"
         },
         {
             "src": "/(.*)",
