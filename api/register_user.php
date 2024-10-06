@@ -1,6 +1,6 @@
 <?php
 session_start();
-include './db_connect.php';  // Database connection file
+include __DIR__ . '/../backend/db_connect.php'; // Database connection file
 function getClientIP()
 {
     if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
