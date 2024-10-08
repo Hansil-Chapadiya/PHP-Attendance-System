@@ -19,6 +19,14 @@
             "dest": "/api/display_profile.php"
         },
         {
+            "src":"/faculty/generate_id",
+            "dest":"/api/generate_id.php"
+        },
+        {
+            "src":"/student/mark",
+            "dest":"/api/mark_present.php"
+        },
+        {
             "src": "/(.*)",
             "dest": "/index.php"
         }
