@@ -1,5 +1,4 @@
 <?php
-session_start();
 header("Content-Type: application/json"); // Set header to return JSON responses
 include __DIR__ . '/../backend/db_connect.php';
 

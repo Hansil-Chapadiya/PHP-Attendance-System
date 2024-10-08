@@ -1,10 +1,12 @@
 <?php
 header("Content-Type: application/json"); // Set response type to JSON
-session_start();
-include __DIR__ . '/../backend/db_connect.php';
+include __DIR__ . '/../backend/db_connect.php'; // Include database connection file
+
+// Check if the request method is GET
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-    if (isset($_SESSION['user_id'])) {
-        $user_id = $_SESSION['user_id'];
+    // Get `user_id` from the request query parameter (passed as part of the URL) or request headers/body
+    if (isset($_GET['user_id'])) {
+        $user_id = intval($_GET['user_id']); // Use GET parameter for user_id
 
         // Retrieve user and student information
         $profile_query = "SELECT u.username, u.full_name, s.branch, s.division
@@ -20,9 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             echo json_encode(['status' => 'error', 'message' => 'Failed to retrieve profile information']);
         }
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Please log in first']);
+        echo json_encode(['status' => 'error', 'message' => 'user_id is required in the query parameters']);
     }
 } else {
-    // If request method is not POST
+    // If request method is not GET
     echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
 }

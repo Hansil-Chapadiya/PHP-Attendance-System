@@ -1,6 +1,5 @@
 <?php
 header("Content-Type: application/json"); // Set response type to JSON
-session_start();
 include __DIR__ . '/../backend/db_connect.php'; // Include database connection file
 
 // Function to get client IP address
@@ -22,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $data = json_decode($postData, true); // Decode the JSON data
 
     // Check if all required fields are set
-    if (isset($data['username'], $data['password'], $data['full_name'], $data['role'], $data['branch'], $data['division'])) {
+    if (isset($data['username'], $data['password'], $data['full_name'], $data['role'], $data['branch'], $data['division'], $data['semester'])) {
         // Retrieve form data
         $username = $data['username'];
         $password = $data['password'];
@@ -30,9 +29,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $role = $data['role'];
         $branch = $data['branch'];
         $division = $data['division'];
+        $semester = $data['semester'];
 
         // Validate input fields
-        if (empty($username) || empty($password) || empty($full_name) || empty($role) || empty($branch) || empty($division)) {
+        if (empty($username) || empty($password) || empty($full_name) || empty($role) || empty($branch) || empty($division) || empty($semester)) {
             echo json_encode(['status' => 'error', 'message' => 'All fields are required']);
             exit;
         }
@@ -62,12 +62,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Insert into respective table based on role
             if ($role == 'student') {
                 // Insert student details
-                $insert_student_query = "INSERT INTO `students` (`user_id`, `branch`, `division`) VALUES ('$user_id', '$branch', '$division')";
+                $insert_student_query = "INSERT INTO `students` (`user_id`, `branch`, `division`, `semester`)
+                                         VALUES ('$user_id', '$branch', '$division', '$semester')";
                 if (mysqli_query($conn, $insert_student_query)) {
-                    // Insert or update class information for the student
-                //     $class_query = "INSERT INTO `classes` (`branch_name`, `division`) VALUES ('$branch', '$division') ON DUPLICATE KEY UPDATE
-                // branch_name = VALUES(branch_name), division = VALUES(division)";
-                //     mysqli_query($conn, $class_query);
+                    // // Insert or update class information for the student
+                    // $class_query = "INSERT INTO `classes` (`branch_name`, `division`, `faculty_ip`)
+                    //                 VALUES ('$branch', '$division', NULL)
+                    //                 ON DUPLICATE KEY UPDATE branch_name = VALUES(branch_name), division = VALUES(division)";
+                    // mysqli_query($conn, $class_query);
 
                     echo json_encode(['status' => 'success', 'message' => 'Student registered successfully']);
                 } else {
@@ -78,9 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $insert_faculty_query = "INSERT INTO `faculty` (`user_id`, `branch`, `ip_address`) VALUES ('$user_id', '$branch', '$ip_address')";
                 if (mysqli_query($conn, $insert_faculty_query)) {
                     // Insert or update class information for the faculty
-                    // $class_query = "INSERT INTO `classes` (`branch_name`, `division`) VALUES ('$branch', '$division') ON DUPLICATE KEY UPDATE
-                    //  branch_name = VALUES(branch_name), division = VALUES(division)";
-                    mysqli_query($conn, $class_query);
+                    // $class_query = "INSERT INTO `classes` (`branch_name`, `division`, `faculty_ip`)
+                    //                 VALUES ('$branch', '$division', '$ip_address')
+                    //                 ON DUPLICATE KEY UPDATE faculty_ip = VALUES(faculty_ip)";
+                    // mysqli_query($conn, $class_query);
 
                     echo json_encode(['status' => 'success', 'message' => 'Faculty registered successfully']);
                 } else {
@@ -93,14 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             echo json_encode(['status' => 'error', 'message' => 'Error: ' . mysqli_error($conn)]);
         }
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Username, password, full name, role, branch, and division are required']);
+        echo json_encode(['status' => 'error', 'message' => 'All fields are required: username, password, full name, role, branch, division, and semester']);
     }
 } else {
     // If request method is not POST
     echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
 }
-
-
-/*
-1) faculty generate class id using faculty/generate_id 2) in class table faculty_in_charge contain faculty_id through session 3) after in mark_attrendance faculty id fetched from class and check ip of student & faculty belongs to same wifi or not
-*/
