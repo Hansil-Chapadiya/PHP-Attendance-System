@@ -27,6 +27,10 @@
             "dest":"/api/mark_present.php"
         },
         {
+            "src":"/faculty/login",
+            "dest":"/api/faculty_login.php"
+        },
+        {
             "src": "/(.*)",
             "dest": "/index.php"
         }
