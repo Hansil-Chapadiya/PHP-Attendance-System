@@ -3,17 +3,17 @@ header("Content-Type: application/json"); // Set response type to JSON
 include __DIR__ . '/../backend/db_connect.php'; // Include database connection file
 
 // Function to get client IP address
-function getClientIP()
-{
-    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-        return $_SERVER['HTTP_CLIENT_IP'];
-    }
-    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-        return trim($ipList[0]);
-    }
-    return $_SERVER['REMOTE_ADDR'];
-}
+// function getClientIP()
+// {
+//     if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+//         return $_SERVER['HTTP_CLIENT_IP'];
+//     }
+//     if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+//         $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+//         return trim($ipList[0]);
+//     }
+//     return $_SERVER['REMOTE_ADDR'];
+// }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get raw POST data
@@ -49,11 +49,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         // Get the user's IP address
-        $ip_address = getClientIP();
+        // $ip_address = getClientIP();
 
         // Insert the new user into the `user` table
-        $insert_user_query = "INSERT INTO `user` (`username`, `password`, `full_name`, `role`, `branch`, `ip_address`)
-                              VALUES ('$username', '$hashed_password', '$full_name', '$role', '$branch', '$ip_address')";
+        $insert_user_query = "INSERT INTO `user` (`username`, `password`, `full_name`, `role`, `branch`)
+                              VALUES ('$username', '$hashed_password', '$full_name', '$role', '$branch')";
 
         if (mysqli_query($conn, $insert_user_query)) {
             // Get the newly inserted user ID
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             } elseif ($role == 'faculty') {
                 // Insert faculty details
-                $insert_faculty_query = "INSERT INTO `faculty` (`user_id`, `branch`, `ip_address`) VALUES ('$user_id', '$branch', '$ip_address')";
+                $insert_faculty_query = "INSERT INTO `faculty` (`user_id`, `branch`) VALUES ('$user_id', '$branch')";
                 if (mysqli_query($conn, $insert_faculty_query)) {
                     // Insert or update class information for the faculty
                     // $class_query = "INSERT INTO `classes` (`branch_name`, `division`, `faculty_ip`)

@@ -10,9 +10,9 @@
 // $password = ""; // Your MySQL database password
 
 $host = "sql12.freesqldatabase.com"; // Your PythonAnywhere MySQL host
-$db_name = "sql12735701"; // Your database name
-$username = "sql12735701"; // Your PythonAnywhere username
-$password = "qKJr15MSCX"; // Your MySQL database password
+$db_name = "sql12736545"; // Your database name
+$username = "sql12736545"; // Your PythonAnywhere username
+$password = "Y9mLJm5bKB"; // Your MySQL database password
 /*
 Host: sql12.freesqldatabase.com
 Database name: sql12735701
@@ -32,5 +32,3 @@ if (!$conn) {
 // $db = new PDO("mysql:host=$host;dbname=$db_name", $username, $password);
 // $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 // include_once('login.php');
-
-?>
