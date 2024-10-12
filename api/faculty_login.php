@@ -1,5 +1,8 @@
 <?php
 header("Content-Type: application/json"); // Set header to return JSON responses
+header("Access-Control-Allow-Origin: *"); // Allow all origins
+header("Access-Control-Allow-Methods: POST"); // Allow only POST method
+header("Access-Control-Allow-Headers: Content-Type"); // Allow Content-Type header
 include __DIR__ . '/../backend/db_connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
