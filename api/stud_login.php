@@ -1,6 +1,15 @@
 <?php
+header("Access-Control-Allow-Origin: *"); // Allow all origins (change this to specific domains for security)
+header("Access-Control-Allow-Methods: POST, OPTIONS"); // Allow specific methods
+header("Access-Control-Allow-Headers: Content-Type, Authorization"); // Allow specific headers
 header("Content-Type: application/json"); // Set header to return JSON responses
+
 include __DIR__ . '/../backend/db_connect.php';
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit(0); // Exit the script for OPTIONS requests
+}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Retrieve the input data
