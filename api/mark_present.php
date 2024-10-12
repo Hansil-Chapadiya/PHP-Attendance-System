@@ -1,6 +1,9 @@
 <?php
 include __DIR__ . '/../backend/db_connect.php'; // Include the database connection file
 header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *"); // Allow all origins
+header("Access-Control-Allow-Methods: POST"); // Allow only POST method
+header("Access-Control-Allow-Headers: Content-Type"); // Allow Content-Type header
 
 // Function to get client IP address
 function getClientIP()
