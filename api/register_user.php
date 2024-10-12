@@ -1,5 +1,9 @@
 <?php
 header("Content-Type: application/json"); // Set response type to JSON
+header("Access-Control-Allow-Origin: *"); // Allow requests from any origin
+header("Access-Control-Allow-Methods: POST"); // Allow only POST requests
+header("Access-Control-Allow-Headers: Content-Type"); // Allow specific headers
+
 include __DIR__ . '/../backend/db_connect.php'; // Include database connection file
 
 // Function to get client IP address
