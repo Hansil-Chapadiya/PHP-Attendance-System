@@ -1,5 +1,8 @@
 <?php
 header("Content-Type: application/json"); // Set response type to JSON
+header("Access-Control-Allow-Origin: *"); // Allow all origins
+header("Access-Control-Allow-Methods: POST"); // Allow only POST method
+header("Access-Control-Allow-Headers: Content-Type"); // Allow Content-Type header
 include __DIR__ . '/../backend/db_connect.php'; // Include the database connection file
 
 // Function to get client IP address
@@ -44,14 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         VALUES ('$class_id', '$branch', '$division', '$faculty_id', '$faculty_ip')
                         ON DUPLICATE KEY UPDATE faculty_in_charge = VALUES(faculty_in_charge), faculty_ip = VALUES(faculty_ip)";
 
-        // $class_query = "INSERT INTO `classes` ( `branch_name`, `division`, `faculty_in_charge`, `faculty_ip`)
-        //                 VALUES ('$branch', '$division', '$faculty_id', '$faculty_ip')
-        //                 ON DUPLICATE KEY UPDATE faculty_in_charge = VALUES(faculty_in_charge), faculty_ip = VALUES(faculty_ip)";
-
         if (mysqli_query($conn, $class_query)) {
             echo json_encode(['status' => 'success', 'message' => 'Class ID generated successfully', 'class_id' => $class_id, 'faculty_ip' => $faculty_ip]);
         } else {
-            echo json_encode(['status' => 'error',  'data' => $faculty_id , 'message' => 'Error inserting into class table: ' . mysqli_error($conn)]);
+            echo json_encode(['status' => 'error', 'message' => 'Error inserting into class table: ' . mysqli_error($conn)]);
         }
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Faculty ID, branch, and division are required']);
