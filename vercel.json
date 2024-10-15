@@ -19,6 +19,10 @@
             "dest": "/api/display_profile.php"
         },
         {
+            "src": "/student/attendance",
+            "dest": "/api/show_attendance.php"
+        },
+        {
             "src":"/faculty/generate_id",
             "dest":"/api/generate_id.php"
         },
