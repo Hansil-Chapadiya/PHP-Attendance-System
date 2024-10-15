@@ -5,21 +5,28 @@
 // $password = "hansil714"; // Your MySQL database password
 
 // $host = "localhost:3307"; // Your PythonAnywhere MySQL host
-// $db_name = "attendance_system_php_mini"; // Your database name
+// $db_name = "attendance_system_php_mini_updated"; // Your database name
 // $username = "root"; // Your PythonAnywhere username
 // $password = ""; // Your MySQL database password
 
+// $host = "sql12.freesqldatabase.com"; // Your PythonAnywhere MySQL host
+// $db_name = "sql12736545"; // Your database name
+// $username = "sql12736545"; // Your PythonAnywhere username
+// $password = "Y9mLJm5bKB"; // Your MySQL database password
+
+
 $host = "sql12.freesqldatabase.com"; // Your PythonAnywhere MySQL host
-$db_name = "sql12736545"; // Your database name
-$username = "sql12736545"; // Your PythonAnywhere username
-$password = "Y9mLJm5bKB"; // Your MySQL database password
+$db_name = "sql12738075"; // Your database name
+$username = "sql12738075"; // Your PythonAnywhere username
+$password = "sVJJdKAZGj"; // Your MySQL database password
+
 /*
 Host: sql12.freesqldatabase.com
-Database name: sql12735701
-Database user: sql12735701
-Database password: qKJr15MSCX
+Database name: sql12738075
+Database user: sql12738075
+Database password: sVJJdKAZGj
 Port number: 3306
-*/
+ */
 
 $conn = mysqli_connect($host, $username, $password, $db_name);
 
