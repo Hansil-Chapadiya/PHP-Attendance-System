@@ -76,7 +76,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt->bind_param("is", $user_id, $branch);
 
                 if ($stmt->execute()) {
-                    echo json_encode(['status' => 'success', 'message' => 'Faculty registered successfully']);
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Registration successful',
+                        'user_id' => $user_id, // Include user_id in the response
+                        'role' => $role
+                    ]);
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Error adding to faculty table: ' . $conn->error]);
                 }
