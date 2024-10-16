@@ -6,19 +6,6 @@ header("Access-Control-Allow-Headers: Content-Type"); // Allow specific headers
 
 include __DIR__ . '/../backend/db_connect.php'; // Include database connection file
 
-// Function to get client IP address
-// function getClientIP()
-// {
-//     if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-//         return $_SERVER['HTTP_CLIENT_IP'];
-//     }
-//     if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-//         $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-//         return trim($ipList[0]);
-//     }
-//     return $_SERVER['REMOTE_ADDR'];
-// }
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get raw POST data
     $postData = file_get_contents("php://input");
@@ -42,9 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         // Check if username already exists
-        $query = "SELECT * FROM `user` WHERE `username` = '$username'";
-        $result = mysqli_query($conn, $query);
-        if (mysqli_num_rows($result) > 0) {
+        $query = "SELECT * FROM `user` WHERE `username` = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
             echo json_encode(['status' => 'error', 'message' => 'Username already exists']);
             exit;
         }
@@ -52,57 +42,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Hash the password
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-        // Get the user's IP address
-        // $ip_address = getClientIP();
-
         // Insert the new user into the `user` table
         $insert_user_query = "INSERT INTO `user` (`username`, `password`, `full_name`, `role`, `branch`)
-                              VALUES ('$username', '$hashed_password', '$full_name', '$role', '$branch')";
+                              VALUES (?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($insert_user_query);
+        $stmt->bind_param("sssss", $username, $hashed_password, $full_name, $role, $branch);
 
-        if (mysqli_query($conn, $insert_user_query)) {
+        if ($stmt->execute()) {
             // Get the newly inserted user ID
-            $user_id = mysqli_insert_id($conn);
+            $user_id = $conn->insert_id;
 
-            // Insert into respective table based on role
             if ($role == 'student') {
                 // Insert student details
                 $insert_student_query = "INSERT INTO `students` (`user_id`, `branch`, `division`, `semester`)
-                                         VALUES ('$user_id', '$branch', '$division', '$semester')";
-                if (mysqli_query($conn, $insert_student_query)) {
-                    // // Insert or update class information for the student
-                    // $class_query = "INSERT INTO `classes` (`branch_name`, `division`, `faculty_ip`)
-                    //                 VALUES ('$branch', '$division', NULL)
-                    //                 ON DUPLICATE KEY UPDATE branch_name = VALUES(branch_name), division = VALUES(division)";
-                    // mysqli_query($conn, $class_query);
+                                         VALUES (?, ?, ?, ?)";
+                $stmt = $conn->prepare($insert_student_query);
+                $stmt->bind_param("isss", $user_id, $branch, $division, $semester);
 
+                if ($stmt->execute()) {
                     echo json_encode([
                         'status' => 'success',
-                        'message' => 'Login successful',
-                        'user_id' => $user['user_id'], // Include user_id in the response
-                        'role' => $user['role']
+                        'message' => 'Registration successful',
+                        'user_id' => $user_id, // Include user_id in the response
+                        'role' => $role
                     ]);
                 } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Error adding to students table: ' . mysqli_error($conn)]);
+                    echo json_encode(['status' => 'error', 'message' => 'Error adding to students table: ' . $conn->error]);
                 }
             } elseif ($role == 'faculty') {
                 // Insert faculty details
-                $insert_faculty_query = "INSERT INTO `faculty` (`user_id`, `branch`) VALUES ('$user_id', '$branch')";
-                if (mysqli_query($conn, $insert_faculty_query)) {
-                    // Insert or update class information for the faculty
-                    // $class_query = "INSERT INTO `classes` (`branch_name`, `division`, `faculty_ip`)
-                    //                 VALUES ('$branch', '$division', '$ip_address')
-                    //                 ON DUPLICATE KEY UPDATE faculty_ip = VALUES(faculty_ip)";
-                    // mysqli_query($conn, $class_query);
+                $insert_faculty_query = "INSERT INTO `faculty` (`user_id`, `branch`) VALUES (?, ?)";
+                $stmt = $conn->prepare($insert_faculty_query);
+                $stmt->bind_param("is", $user_id, $branch);
 
+                if ($stmt->execute()) {
                     echo json_encode(['status' => 'success', 'message' => 'Faculty registered successfully']);
                 } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Error adding to faculty table: ' . mysqli_error($conn)]);
+                    echo json_encode(['status' => 'error', 'message' => 'Error adding to faculty table: ' . $conn->error]);
                 }
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Invalid role specified']);
             }
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Error: ' . mysqli_error($conn)]);
+            echo json_encode(['status' => 'error', 'message' => 'Error: ' . $conn->error]);
         }
     } else {
         echo json_encode(['status' => 'error', 'message' => 'All fields are required: username, password, full name, role, branch, division, and semester']);
