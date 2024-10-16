@@ -78,7 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     echo json_encode([
                         'status' => 'success',
                         'message' => 'Login successful',
-                        'user_id' => $user['user_id'] // Include user_id in the response
+                        'user_id' => $user['user_id'], // Include user_id in the response
+                        'role' => $user['role']
                     ]);
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Error adding to students table: ' . mysqli_error($conn)]);
