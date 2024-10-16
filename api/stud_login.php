@@ -32,8 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['username'] = $user['username'];
 
-                // Respond with a success message
-                echo json_encode(['status' => 'success', 'message' => 'Login successful']);
+                // Respond with a success message and the user_id
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Login successful',
+                    'user_id' => $user['user_id'] // Include user_id in the response
+                ]);
             } else {
                 // Invalid password
                 echo json_encode(['status' => 'error', 'message' => 'Invalid password']);
