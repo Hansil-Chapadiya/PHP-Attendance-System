@@ -75,7 +75,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     //                 ON DUPLICATE KEY UPDATE branch_name = VALUES(branch_name), division = VALUES(division)";
                     // mysqli_query($conn, $class_query);
 
-                    echo json_encode(['status' => 'success', 'message' => 'Student registered successfully']);
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Login successful',
+                        'user_id' => $user['user_id'] // Include user_id in the response
+                    ]);
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Error adding to students table: ' . mysqli_error($conn)]);
                 }
