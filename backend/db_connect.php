@@ -2,7 +2,6 @@
 // $host = "HansilGreat.mysql.pythonanywhere-services.com"; // Your PythonAnywhere MySQL host
 // $db_name = "HansilGreat$attendance_system_php_mini"; // Your database name
 // $username = "HansilGreat"; // Your PythonAnywhere username
-// $password = "hansil714"; // Your MySQL database password
 
 // $host = "localhost:3307"; // Your PythonAnywhere MySQL host
 // $db_name = "attendance_system_php_mini_updated"; // Your database name
