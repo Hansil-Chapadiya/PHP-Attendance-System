@@ -16,9 +16,9 @@
 
 
 $host = "sql12.freesqldatabase.com"; // Your PythonAnywhere MySQL host
-$db_name = "sql12738075"; // Your database name
-$username = "sql12738075"; // Your PythonAnywhere username
-$password = "sVJJdKAZGj"; // Your MySQL database password
+$db_name = "sql12740194"; // Your database name
+$username = "sql12740194"; // Your PythonAnywhere username
+$password = "6CyKWKpUUh"; // Your MySQL database password
 
 /*
 Host: sql12.freesqldatabase.com
@@ -27,6 +27,13 @@ Database user: sql12738075
 Database password: sVJJdKAZGj
 Port number: 3306
  */
+/*
+Host: sql12.freesqldatabase.com
+Database name: sql12740194
+Database user: sql12740194
+Database password: 6CyKWKpUUh
+Port number: 3306
+*/
 
 $conn = mysqli_connect($host, $username, $password, $db_name);
 
