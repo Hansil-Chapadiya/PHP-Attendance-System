@@ -152,6 +152,45 @@ class Auth {
                 $apache_headers = apache_request_headers();
                 if (isset($apache_headers['Authorization'])) {
                     $headers['Authorization'] = $apache_headers['Authorization'];
+                    error_log('Found token in apache_request_headers');
+                }
+            }
+        }
+        
+        if (isset($headers['Authorization'])) {
+            error_log('Authorization header found: ' . substr($headers['Authorization'], 0, 20) . '...');
+            $matches = [];
+            if (preg_match('/Bearer\s+(.*)$/i', $headers['Authorization'], $matches)) {
+                error_log('✅ Token extracted successfully');
+                return $matches[1];
+            } else {
+                error_log('❌ Bearer token pattern not matched');
+            }
+        } else {
+            error_log('❌ No Authorization header found in request');
+        }
+        
+        // FALLBACK: Check POST body for token (InfinityFree workaround)
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $postData = file_get_contents("php://input");
+            $data = json_decode($postData, true);
+            if (isset($data['_token'])) {
+                error_log('✅ Token found in POST body (_token field)');
+                return $data['_token'];
+            }
+        }
+        
+        // FALLBACK: Check GET parameter (last resort)
+        if (isset($_GET['_token'])) {
+            error_log('✅ Token found in GET parameter');
+            return $_GET['_token'];
+        }
+        
+        return null;
+            } elseif (function_exists('apache_request_headers')) {
+                $apache_headers = apache_request_headers();
+                if (isset($apache_headers['Authorization'])) {
+                    $headers['Authorization'] = $apache_headers['Authorization'];
                 }
             }
         }

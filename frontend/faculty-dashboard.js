@@ -37,12 +37,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('🔐 Sending request with token:', token ? 'Token exists' : 'NO TOKEN!');
             console.log('📤 Request data:', { branch, division });
             
+            // Prepare request data with token fallback for InfinityFree
+            const requestData = { 
+                branch, 
+                division,
+                _token: token  // Fallback: Send token in body if header doesn't work
+            };
+            
             const result = await apiCall('generate_id.php', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ branch, division })
+                body: JSON.stringify(requestData)
             });
 
             console.log('📥 Response:', result);
