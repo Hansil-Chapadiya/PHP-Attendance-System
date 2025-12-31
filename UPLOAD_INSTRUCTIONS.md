@@ -1,20 +1,40 @@
 # 🚀 InfinityFree Deployment Instructions
 
 ## 📦 Files Ready for Upload
-All files are in: `infinityfree_upload/` folder
+**Option 1 (Easiest):** Use `infinityfree_deploy.zip`  
+**Option 2:** Upload from `infinityfree_upload/` folder
 
-## 📤 Upload Steps
+---
 
-### 1️⃣ Open FileZilla
+## 📤 EASY METHOD: Upload via InfinityFree File Manager
+
+### 1️⃣ Login to InfinityFree
+- Go to: https://infinityfree.com/
+- Login to your account
+- Select your website: **hcthegreat.ct.ws**
+
+### 2️⃣ Open File Manager
+- Click **"File Manager"** in control panel
+- Navigate to `/htdocs/` folder
+
+### 3️⃣ Upload ZIP File
+- Click **"Upload"** button
+- Upload `infinityfree_deploy.zip`
+- Once uploaded, **right-click** the ZIP file
+- Select **"Extract"** or **"Unzip"**
+- Extract to `/htdocs/` (current folder)
+- **Delete** the ZIP file after extraction
+
+**OR** upload files one by one from `infinityfree_upload/` folder
+
+---
+
+## 📤 ALTERNATIVE: FTP (FileZilla)
+Only if file manager doesn't work:
 - Host: `ftpupload.net`
-- Username: `if0_37963815`
-- Password: (your InfinityFree password)
-- Port: `21`
-
-### 2️⃣ Upload ALL Files
-- Navigate to `/htdocs/` on InfinityFree
-- Upload EVERYTHING from `infinityfree_upload/` folder
-- **IMPORTANT:** Overwrite all existing files!
+- Username: `if0_37963815`  
+- Password: (your password)
+- Upload all from `infinityfree_upload/` to `/htdocs/`
 
 ### 3️⃣ Create Test Users (One-Time Only)
 1. Open in browser: `https://hcthegreat.ct.ws/create_users_once.php`
