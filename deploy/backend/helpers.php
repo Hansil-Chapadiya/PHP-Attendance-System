@@ -125,11 +125,18 @@ class Auth {
      * Get token from request headers
      */
     public static function getTokenFromRequest() {
+        // Debug logging (remove in production)
+        error_log('🔍 Auth Debug - Checking for token');
+        error_log('HTTP_AUTHORIZATION: ' . ($_SERVER['HTTP_AUTHORIZATION'] ?? 'NOT SET'));
+        error_log('REDIRECT_HTTP_AUTHORIZATION: ' . ($_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? 'NOT SET'));
+        
         // Try getallheaders() first
         if (function_exists('getallheaders')) {
             $headers = getallheaders();
+            error_log('getallheaders() available: ' . json_encode($headers));
         } else {
             $headers = [];
+            error_log('getallheaders() NOT available');
         }
         
         // Fallback to $_SERVER for Authorization header
@@ -137,8 +144,10 @@ class Auth {
             // Check various possible header names
             if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
                 $headers['Authorization'] = $_SERVER['HTTP_AUTHORIZATION'];
+                error_log('Found token in HTTP_AUTHORIZATION');
             } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
                 $headers['Authorization'] = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+                error_log('Found token in REDIRECT_HTTP_AUTHORIZATION');
             } elseif (function_exists('apache_request_headers')) {
                 $apache_headers = apache_request_headers();
                 if (isset($apache_headers['Authorization'])) {
@@ -148,10 +157,16 @@ class Auth {
         }
         
         if (isset($headers['Authorization'])) {
+            error_log('Authorization header found: ' . substr($headers['Authorization'], 0, 20) . '...');
             $matches = [];
             if (preg_match('/Bearer\s+(.*)$/i', $headers['Authorization'], $matches)) {
+                error_log('✅ Token extracted successfully');
                 return $matches[1];
+            } else {
+                error_log('❌ Bearer token pattern not matched');
             }
+        } else {
+            error_log('❌ No Authorization header found in request');
         }
         
         return null;

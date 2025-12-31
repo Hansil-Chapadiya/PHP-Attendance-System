@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
 
         try {
+            console.log('🔐 Sending request with token:', token ? 'Token exists' : 'NO TOKEN!');
+            console.log('📤 Request data:', { branch, division });
+            
             const result = await apiCall('generate_id.php', {
                 method: 'POST',
                 headers: {
@@ -41,6 +44,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 },
                 body: JSON.stringify({ branch, division })
             });
+
+            console.log('📥 Response:', result);
 
             if (result.data.status === 'success') {
                 showAlert('Session started successfully!', 'success');
