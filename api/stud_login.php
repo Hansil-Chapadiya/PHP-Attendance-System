@@ -1,56 +1,80 @@
 <?php
-header("Access-Control-Allow-Origin: *"); // Allow all origins (change this to specific domains for security)
-header("Access-Control-Allow-Methods: POST, OPTIONS"); // Allow specific methods
-header("Access-Control-Allow-Headers: Content-Type, Authorization"); // Allow specific headers
-header("Content-Type: application/json"); // Set header to return JSON responses
+require_once __DIR__ . '/../backend/helpers.php';
+require_once __DIR__ . '/../backend/db_connect.php';
 
-include __DIR__ . '/../backend/db_connect.php';
-
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    exit(0); // Exit the script for OPTIONS requests
-}
+// Handle CORS
+CORSHelper::handleCORS();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Retrieve the input data
+    // Get input data
     $input = json_decode(file_get_contents("php://input"), true);
 
-    if (isset($input['username']) && isset($input['password'])) {
-        $username = mysqli_real_escape_string($conn, $input['username']);
-        $password = $input['password'];
+    if (!isset($input['username']) || !isset($input['password'])) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Username and password are required']);
+        exit;
+    }
 
-        // Query to validate login credentials
-        $query = "SELECT * FROM `user` WHERE `username` = '$username' AND `role` = 'student'";
-        $result = mysqli_query($conn, $query);
+    $username = $input['username'];
+    $password = $input['password'];
 
-        if (mysqli_num_rows($result) == 1) {
-            $user = mysqli_fetch_assoc($result);
+    // Validate input
+    $usernameValidation = Validator::validateUsername($username);
+    if (!$usernameValidation['valid']) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $usernameValidation['message']]);
+        exit;
+    }
 
-            // Verify the hashed password
-            if (password_verify($password, $user['password'])) {
-                // Set session variables
-                $_SESSION['user_id'] = $user['user_id'];
-                $_SESSION['username'] = $user['username'];
+    // Rate limiting
+    $ip = NetworkHelper::getClientIP();
+    $limitCheck = RateLimiter::checkLimit($ip . '_login', $conn);
+    if (!$limitCheck['allowed']) {
+        http_response_code(429);
+        echo json_encode(['status' => 'error', 'message' => $limitCheck['message']]);
+        exit;
+    }
 
-                // Respond with a success message and the user_id
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => 'Login successful',
-                    'user_id' => $user['user_id'] // Include user_id in the response
-                ]);
-            } else {
-                // Invalid password
-                echo json_encode(['status' => 'error', 'message' => 'Invalid password']);
-            }
+    // Use prepared statement to prevent SQL injection
+    $stmt = $conn->prepare("SELECT user_id, username, password, full_name, role FROM `user` WHERE username = ? AND role = 'student'");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
+
+        // Verify password
+        if (password_verify($password, $user['password'])) {
+            // Generate JWT token
+            Auth::init();
+            $token = Auth::generateToken($user['user_id'], $user['username'], $user['role']);
+
+            // Success - don't record rate limit attempt
+            http_response_code(200);
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Login successful',
+                'user_id' => $user['user_id'],
+                'username' => $user['username'],
+                'full_name' => $user['full_name'],
+                'token' => $token
+            ]);
         } else {
-            // No matching user found or not a student
-            echo json_encode(['status' => 'error', 'message' => 'Invalid username or not a student']);
+            // Record failed attempt
+            RateLimiter::recordAttempt($ip . '_login', $conn);
+            http_response_code(401);
+            echo json_encode(['status' => 'error', 'message' => 'Invalid credentials']);
         }
     } else {
-        // Username or password not provided in the request
-        echo json_encode(['status' => 'error', 'message' => 'Username and password are required']);
+        // Record failed attempt
+        RateLimiter::recordAttempt($ip . '_login', $conn);
+        http_response_code(401);
+        echo json_encode(['status' => 'error', 'message' => 'Invalid credentials']);
     }
+    
+    $stmt->close();
 } else {
-    // Invalid request method
-    echo json_encode(['status' => 'error', 'message' => 'Invalid Request Method. Use POST']);
+    http_response_code(405);
+    echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
 }

@@ -1,60 +1,103 @@
 <?php
-header("Content-Type: application/json"); // Set response type to JSON
-header("Access-Control-Allow-Origin: *"); // Allow all origins
-header("Access-Control-Allow-Methods: POST"); // Allow only POST method
-header("Access-Control-Allow-Headers: Content-Type"); // Allow Content-Type header
-include __DIR__ . '/../backend/db_connect.php'; // Include the database connection file
+require_once __DIR__ . '/../backend/helpers.php';
+require_once __DIR__ . '/../backend/db_connect.php';
 
-// Function to get client IP address
-function getClientIP()
-{
-    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-        return $_SERVER['HTTP_CLIENT_IP'];
-    }
-    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-        return trim($ipList[0]);
-    }
-    return $_SERVER['REMOTE_ADDR'];
-}
+// Handle CORS
+CORSHelper::handleCORS();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Require faculty authentication
+    $user = Auth::requireRole('faculty');
+    $faculty_id = $user['user_id'];
+
     // Get raw POST data
     $postData = file_get_contents("php://input");
-    $data = json_decode($postData, true); // Decode the JSON data
+    $data = json_decode($postData, true);
 
-    // Check if all required fields are provided
-    if (isset($data['faculty_id'], $data['branch'], $data['division'])) {
-        $faculty_id = $data['faculty_id'];
-        $branch = $data['branch'];
-        $division = $data['division'];
-
-        // Validate input fields
-        if (empty($faculty_id) || empty($branch) || empty($division)) {
-            echo json_encode(['status' => 'error', 'message' => 'Faculty ID, branch, and division are required']);
-            exit;
-        }
-
-        // Generate a unique class ID (e.g., using a combination of branch, division, and timestamp)
-        $class_id = strtoupper(substr($branch, 0, 3)) . '-' . strtoupper($division) . '-' . time();
-        // $class_id = time();
-
-        // Get the IP address of the faculty
-        $faculty_ip = getClientIP();
-
-        // Insert or update the `classes` table with faculty details and IP address
-        $class_query = "INSERT INTO `classes` (`class_id`, `branch`, `division`, `faculty_in_charge`, `faculty_ip`)
-                        VALUES ('$class_id', '$branch', '$division', '$faculty_id', '$faculty_ip')
-                        ON DUPLICATE KEY UPDATE faculty_in_charge = VALUES(faculty_in_charge), faculty_ip = VALUES(faculty_ip)";
-
-        if (mysqli_query($conn, $class_query)) {
-            echo json_encode(['status' => 'success', 'message' => 'Class ID generated successfully', 'class_id' => $class_id, 'faculty_ip' => $faculty_ip]);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Error inserting into class table: ' . mysqli_error($conn)]);
-        }
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Faculty ID, branch, and division are required']);
+    // Check if required fields are provided
+    if (!isset($data['branch'], $data['division'])) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Branch and division are required']);
+        exit;
     }
+
+    $branch = $data['branch'];
+    $division = $data['division'];
+
+    // Validate branch and division
+    $branchValidation = Validator::validateBranch($branch);
+    if (!$branchValidation['valid']) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $branchValidation['message']]);
+        exit;
+    }
+    $branch = $branchValidation['value'];
+
+    $divisionValidation = Validator::validateDivision($division);
+    if (!$divisionValidation['valid']) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $divisionValidation['message']]);
+        exit;
+    }
+    $division = $divisionValidation['value'];
+
+    // Verify faculty belongs to the branch
+    $stmt = $conn->prepare("SELECT faculty_id, branch FROM faculty WHERE user_id = ?");
+    $stmt->bind_param("i", $faculty_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 0) {
+        http_response_code(403);
+        echo json_encode(['status' => 'error', 'message' => 'Faculty record not found']);
+        exit;
+    }
+    
+    $faculty_data = $result->fetch_assoc();
+    $faculty_record_id = $faculty_data['faculty_id']; // Get the actual faculty table ID
+    if ($faculty_data['branch'] !== $branch) {
+        http_response_code(403);
+        echo json_encode(['status' => 'error', 'message' => 'You can only create classes for your assigned branch']);
+        exit;
+    }
+    $stmt->close();
+
+    // Generate a unique class ID
+    $class_id = strtoupper(substr($branch, 0, 3)) . '-' . strtoupper($division) . '-' . time();
+
+    // Get the IP address of the faculty
+    $faculty_ip = NetworkHelper::getClientIP();
+
+    // Load config for session duration
+    $config = require __DIR__ . '/../backend/config.php';
+    $session_duration = $config['class']['session_duration'];
+    
+    // Calculate expiry time
+    $created_at = date('Y-m-d H:i:s');
+    $expires_at = date('Y-m-d H:i:s', time() + $session_duration);
+
+    // Insert into classes table using prepared statement (use faculty_record_id, not faculty_id which is user_id)
+    $stmt = $conn->prepare("INSERT INTO `classes` (class_id, branch, division, faculty_in_charge, faculty_ip, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssisss", $class_id, $branch, $division, $faculty_record_id, $faculty_ip, $created_at, $expires_at);
+
+    if ($stmt->execute()) {
+        http_response_code(201);
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Class session created successfully',
+            'class_id' => $class_id,
+            'faculty_ip' => $faculty_ip,
+            'expires_at' => $expires_at,
+            'valid_for_minutes' => ($session_duration / 60)
+        ]);
+    } else {
+        error_log("Error creating class: " . $stmt->error);
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Failed to create class session']);
+    }
+    
+    $stmt->close();
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+    http_response_code(405);
+    echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
 }

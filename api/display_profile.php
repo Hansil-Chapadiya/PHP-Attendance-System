@@ -1,30 +1,59 @@
 <?php
-header("Content-Type: application/json"); // Set response type to JSON
-include __DIR__ . '/../backend/db_connect.php'; // Include database connection file
+require_once __DIR__ . '/../backend/helpers.php';
+require_once __DIR__ . '/../backend/db_connect.php';
 
-// Check if the request method is GET
+// Handle CORS
+CORSHelper::handleCORS();
+
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-    // Get `user_id` from the request query parameter (passed as part of the URL) or request headers/body
-    if (isset($_GET['user_id'])) {
-        $user_id = intval($_GET['user_id']); // Use GET parameter for user_id
+    // Require authentication
+    $user = Auth::requireAuth();
+    $authenticated_user_id = $user['user_id'];
 
-        // Retrieve user and student information
-        $profile_query = "SELECT u.username, u.full_name, s.branch, s.division
-                          FROM `user` u
-                          JOIN `students` s ON u.user_id = s.user_id
-                          WHERE u.user_id = $user_id";
-        $profile_result = mysqli_query($conn, $profile_query);
+    // Allow users to view their own profile, or specify user_id
+    $requested_user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : $authenticated_user_id;
 
-        if ($profile_result) {
-            $profile_data = mysqli_fetch_assoc($profile_result);
+    // Only allow users to view their own profile unless they're faculty
+    if ($user['role'] !== 'faculty' && $requested_user_id !== $authenticated_user_id) {
+        http_response_code(403);
+        echo json_encode(['status' => 'error', 'message' => 'Access forbidden']);
+        exit;
+    }
+
+    // Use prepared statement to retrieve profile
+    if ($user['role'] === 'student' || (isset($_GET['user_id']) && $user['role'] === 'faculty')) {
+        $stmt = $conn->prepare("SELECT u.username, u.full_name, u.role, s.branch, s.division, s.semester FROM `user` u JOIN `students` s ON u.user_id = s.user_id WHERE u.user_id = ?");
+        $stmt->bind_param("i", $requested_user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $profile_data = $result->fetch_assoc();
+            http_response_code(200);
             echo json_encode(['status' => 'success', 'data' => $profile_data]);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to retrieve profile information']);
+            http_response_code(404);
+            echo json_encode(['status' => 'error', 'message' => 'Profile not found']);
         }
+        $stmt->close();
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'user_id is required in the query parameters']);
+        // Faculty profile
+        $stmt = $conn->prepare("SELECT u.username, u.full_name, u.role, f.branch FROM `user` u JOIN `faculty` f ON u.user_id = f.user_id WHERE u.user_id = ?");
+        $stmt->bind_param("i", $requested_user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $profile_data = $result->fetch_assoc();
+            http_response_code(200);
+            echo json_encode(['status' => 'success', 'data' => $profile_data]);
+        } else {
+            http_response_code(404);
+            echo json_encode(['status' => 'error', 'message' => 'Profile not found']);
+        }
+        $stmt->close();
     }
 } else {
-    // If request method is not GET
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+    http_response_code(405);
+    echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
 }

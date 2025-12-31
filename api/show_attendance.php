@@ -1,33 +1,45 @@
 <?php
-include __DIR__ . '/../backend/db_connect.php'; // Include the database connection file
-header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *"); // Allow all origins
-header("Access-Control-Allow-Methods: GET"); // Allow only GET method
-header("Access-Control-Allow-Headers: Content-Type"); // Allow Content-Type header
+require_once __DIR__ . '/../backend/helpers.php';
+require_once __DIR__ . '/../backend/db_connect.php';
+
+// Handle CORS
+CORSHelper::handleCORS();
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-    // Get the user_id from the query parameters
-    if (isset($_GET['user_id'])) {
-        $user_id = $_GET['user_id'];
+    // Require authentication
+    $user = Auth::requireAuth();
+    $authenticated_user_id = $user['user_id'];
 
-        // Query to get attendance records for the specified user
-        $attendance_query = "SELECT * FROM `attendance` WHERE `user_id` = $user_id ORDER BY `date` DESC";
-        $attendance_result = mysqli_query($conn, $attendance_query);
+    // Allow users to view their own attendance, or specify user_id if faculty
+    $requested_user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : $authenticated_user_id;
 
-        // Check if any records were found
-        if (mysqli_num_rows($attendance_result) > 0) {
-            $attendance_records = [];
-            while ($row = mysqli_fetch_assoc($attendance_result)) {
-                $attendance_records[] = $row;
-            }
-            echo json_encode(['status' => 'success', 'data' => $attendance_records]);
-        } else {
-            echo json_encode(['status' => 'info', 'message' => 'No attendance records found for this user']);
-        }
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'User ID is required']);
+    // Only allow users to view their own attendance unless they're faculty
+    if ($user['role'] !== 'faculty' && $requested_user_id !== $authenticated_user_id) {
+        http_response_code(403);
+        echo json_encode(['status' => 'error', 'message' => 'Access forbidden']);
+        exit;
     }
+
+    // Use prepared statement to get attendance records
+    $stmt = $conn->prepare("SELECT a.attendance_id, a.class_id, a.date, a.status, a.marked_time, c.branch, c.division FROM `attendance` a LEFT JOIN `classes` c ON a.class_id = c.class_id WHERE a.user_id = ? ORDER BY a.date DESC, a.marked_time DESC");
+    $stmt->bind_param("i", $requested_user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $attendance_records = [];
+        while ($row = $result->fetch_assoc()) {
+            $attendance_records[] = $row;
+        }
+        http_response_code(200);
+        echo json_encode(['status' => 'success', 'data' => $attendance_records, 'count' => count($attendance_records)]);
+    } else {
+        http_response_code(200);
+        echo json_encode(['status' => 'success', 'data' => [], 'count' => 0, 'message' => 'No attendance records found']);
+    }
+    
+    $stmt->close();
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+    http_response_code(405);
+    echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
 }
-?>

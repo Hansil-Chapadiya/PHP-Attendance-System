@@ -1,100 +1,169 @@
 <?php
-header("Content-Type: application/json"); // Set response type to JSON
-header("Access-Control-Allow-Origin: *"); // Allow requests from any origin
-header("Access-Control-Allow-Methods: POST"); // Allow only POST requests
-header("Access-Control-Allow-Headers: Content-Type"); // Allow specific headers
+require_once __DIR__ . '/../backend/helpers.php';
+require_once __DIR__ . '/../backend/db_connect.php';
 
-include __DIR__ . '/../backend/db_connect.php'; // Include database connection file
+// Handle CORS
+CORSHelper::handleCORS();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get raw POST data
     $postData = file_get_contents("php://input");
-    $data = json_decode($postData, true); // Decode the JSON data
+    $data = json_decode($postData, true);
 
     // Check if all required fields are set
-    if (isset($data['username'], $data['password'], $data['full_name'], $data['role'], $data['branch'], $data['division'], $data['semester'])) {
-        // Retrieve form data
-        $username = $data['username'];
-        $password = $data['password'];
-        $full_name = $data['full_name'];
-        $role = $data['role'];
-        $branch = $data['branch'];
-        $division = $data['division'];
-        $semester = $data['semester'];
+    if (!isset($data['username'], $data['password'], $data['full_name'], $data['role'], $data['branch'])) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Required fields: username, password, full_name, role, branch']);
+        exit;
+    }
 
-        // Validate input fields
-        if (empty($username) || empty($password) || empty($full_name) || empty($role) || empty($branch) || empty($division) || empty($semester)) {
-            echo json_encode(['status' => 'error', 'message' => 'All fields are required']);
+    // Validate username
+    $usernameValidation = Validator::validateUsername($data['username']);
+    if (!$usernameValidation['valid']) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $usernameValidation['message']]);
+        exit;
+    }
+    $username = $usernameValidation['value'];
+
+    // Validate password
+    $passwordValidation = Validator::validatePassword($data['password']);
+    if (!$passwordValidation['valid']) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $passwordValidation['message']]);
+        exit;
+    }
+
+    // Validate full name
+    $nameValidation = Validator::validateFullName($data['full_name']);
+    if (!$nameValidation['valid']) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $nameValidation['message']]);
+        exit;
+    }
+    $full_name = $nameValidation['value'];
+
+    // Validate role
+    $roleValidation = Validator::validateRole($data['role']);
+    if (!$roleValidation['valid']) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $roleValidation['message']]);
+        exit;
+    }
+    $role = $roleValidation['value'];
+
+    // Validate branch
+    $branchValidation = Validator::validateBranch($data['branch']);
+    if (!$branchValidation['valid']) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $branchValidation['message']]);
+        exit;
+    }
+    $branch = $branchValidation['value'];
+
+    // For students, validate division and semester
+    $division = null;
+    $semester = null;
+    if ($role === 'student') {
+        if (!isset($data['division'], $data['semester'])) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => 'Students must provide division and semester']);
             exit;
         }
 
-        // Check if username already exists
-        $query = "SELECT * FROM `user` WHERE `username` = ?";
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($result->num_rows > 0) {
-            echo json_encode(['status' => 'error', 'message' => 'Username already exists']);
+        $divisionValidation = Validator::validateDivision($data['division']);
+        if (!$divisionValidation['valid']) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => $divisionValidation['message']]);
             exit;
         }
+        $division = $divisionValidation['value'];
 
-        // Hash the password
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $semesterValidation = Validator::validateSemester($data['semester']);
+        if (!$semesterValidation['valid']) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => $semesterValidation['message']]);
+            exit;
+        }
+        $semester = $semesterValidation['value'];
+    }
 
+    // Check if username already exists using prepared statement
+    $stmt = $conn->prepare("SELECT user_id FROM `user` WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        http_response_code(409);
+        echo json_encode(['status' => 'error', 'message' => 'Username already exists']);
+        exit;
+    }
+    $stmt->close();
+
+    // Hash the password
+    $hashed_password = password_hash($data['password'], PASSWORD_DEFAULT);
+
+    // Begin transaction
+    $conn->begin_transaction();
+
+    try {
         // Insert the new user into the `user` table
-        $insert_user_query = "INSERT INTO `user` (`username`, `password`, `full_name`, `role`, `branch`)
-                              VALUES (?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($insert_user_query);
+        $stmt = $conn->prepare("INSERT INTO `user` (username, password, full_name, role, branch) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("sssss", $username, $hashed_password, $full_name, $role, $branch);
-
-        if ($stmt->execute()) {
-            // Get the newly inserted user ID
-            $user_id = $conn->insert_id;
-
-            if ($role == 'student') {
-                // Insert student details
-                $insert_student_query = "INSERT INTO `students` (`user_id`, `branch`, `division`, `semester`)
-                                         VALUES (?, ?, ?, ?)";
-                $stmt = $conn->prepare($insert_student_query);
-                $stmt->bind_param("isss", $user_id, $branch, $division, $semester);
-
-                if ($stmt->execute()) {
-                    echo json_encode([
-                        'status' => 'success',
-                        'message' => 'Registration successful',
-                        'user_id' => $user_id, // Include user_id in the response
-                        'role' => $role
-                    ]);
-                } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Error adding to students table: ' . $conn->error]);
-                }
-            } elseif ($role == 'faculty') {
-                // Insert faculty details
-                $insert_faculty_query = "INSERT INTO `faculty` (`user_id`, `branch`) VALUES (?, ?)";
-                $stmt = $conn->prepare($insert_faculty_query);
-                $stmt->bind_param("is", $user_id, $branch);
-
-                if ($stmt->execute()) {
-                    echo json_encode([
-                        'status' => 'success',
-                        'message' => 'Registration successful',
-                        'user_id' => $user_id, // Include user_id in the response
-                        'role' => $role
-                    ]);
-                } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Error adding to faculty table: ' . $conn->error]);
-                }
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Invalid role specified']);
-            }
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Error: ' . $conn->error]);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to create user");
         }
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'All fields are required: username, password, full name, role, branch, division, and semester']);
+
+        $user_id = $conn->insert_id;
+        $stmt->close();
+
+        if ($role === 'student') {
+            // Insert student details
+            $stmt = $conn->prepare("INSERT INTO `students` (user_id, branch, division, semester) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("issi", $user_id, $branch, $division, $semester);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Failed to create student record");
+            }
+            $stmt->close();
+        } elseif ($role === 'faculty') {
+            // Insert faculty details
+            $stmt = $conn->prepare("INSERT INTO `faculty` (user_id, branch) VALUES (?, ?)");
+            $stmt->bind_param("is", $user_id, $branch);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Failed to create faculty record");
+            }
+            $stmt->close();
+        }
+
+        // Commit transaction
+        $conn->commit();
+
+        // Generate token for immediate login
+        Auth::init();
+        $token = Auth::generateToken($user_id, $username, $role);
+
+        http_response_code(201);
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Registration successful',
+            'user_id' => $user_id,
+            'username' => $username,
+            'role' => $role,
+            'token' => $token
+        ]);
+
+    } catch (Exception $e) {
+        // Rollback transaction on error
+        $conn->rollback();
+        error_log("Registration error: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Registration failed. Please try again.']);
     }
 } else {
-    // If request method is not POST
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+    http_response_code(405);
+    echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
 }
