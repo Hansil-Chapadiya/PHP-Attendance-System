@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick InfinityFree Test</title>
+</head>
+<body>
+    <h1>InfinityFree API Quick Test</h1>
+    <div id="output" style="font-family: monospace; white-space: pre-wrap;"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        // YOUR InfinityFree URL here
+        const BASE_URL = 'https://hcthegreat.ct.ws'; // CHANGE THIS!
+        
+        async function testAPI() {
+            output.innerHTML = 'Testing API endpoints...\n\n';
+            
+            // Test direct file access
+            const endpoints = [
+                '/api/stud_login.php',
+                '/api/faculty_login.php',
+                '/api/register_user.php'
+            ];
+            
+            for (const endpoint of endpoints) {
+                const url = BASE_URL + endpoint;
+                output.innerHTML += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                output.innerHTML += `Testing: ${url}\n`;
+                output.innerHTML += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    
+                    const text = await response.text();
+                    
+                    output.innerHTML += `Status: ${response.status} ${response.statusText}\n`;
+                    output.innerHTML += `Content-Type: ${response.headers.get('content-type')}\n`;
+                    output.innerHTML += `\nResponse (first 1000 chars):\n`;
+                    output.innerHTML += `${text.substring(0, 1000)}\n`;
+                    
+                    if (response.status === 404) {
+                        output.innerHTML += `\n❌ FILE NOT FOUND!\n`;
+                        output.innerHTML += `This means the PHP file is NOT uploaded to InfinityFree!\n`;
+                    } else if (response.status === 405) {
+                        output.innerHTML += `\n✅ FILE EXISTS! (405 = Method not allowed, needs POST)\n`;
+                    } else if (response.status === 200) {
+                        output.innerHTML += `\n✅ FILE ACCESSIBLE!\n`;
+                    }
+                    
+                } catch (error) {
+                    output.innerHTML += `\n❌ ERROR: ${error.message}\n`;
+                }
+                
+                await new Promise(r => setTimeout(r, 500));
+            }
+            
+            output.innerHTML += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            output.innerHTML += `TEST COMPLETE\n`;
+            output.innerHTML += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            output.innerHTML += `If you see 404 errors above, it means:\n`;
+            output.innerHTML += `1. API files are NOT uploaded to InfinityFree\n`;
+            output.innerHTML += `2. OR files are in wrong folder\n\n`;
+            output.innerHTML += `Expected folder structure on InfinityFree:\n`;
+            output.innerHTML += `htdocs/\n`;
+            output.innerHTML += `  └── api/\n`;
+            output.innerHTML += `      ├── stud_login.php\n`;
+            output.innerHTML += `      ├── faculty_login.php\n`;
+            output.innerHTML += `      └── register_user.php\n`;
+        }
+        
+        // Auto-run test
+        testAPI();
+    </script>
+</body>
+</html>

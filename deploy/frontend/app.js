@@ -7,7 +7,7 @@ const isLocalhost = window.location.hostname === 'localhost' || window.location.
 let localPort = window.location.port || '80';
 const API_BASE_URL = isLocalhost 
     ? `http://localhost:${localPort}/Hansil/PHP-Attendance-System/api`
-    : 'https://hcthegreat.ct.ws/api';
+    : 'https://hcthegreat.ct.ws/deploy/api';  // ✅ Fixed: Added /deploy
 
 console.log('API Base URL:', API_BASE_URL);
 
