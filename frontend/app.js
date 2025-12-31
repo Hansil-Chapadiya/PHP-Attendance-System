@@ -76,6 +76,7 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
     try {
         const response = await fetch(url, {
             ...options,
+            credentials: 'include', // ✅ Include cookies for InfinityFree
             headers: {
                 'Content-Type': 'application/json',
                 ...options.headers,
@@ -90,6 +91,29 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
         if (response.status === 404) {
             console.error('❌ 404 Not Found:', url);
             throw new Error(`API endpoint not found: ${endpoint}. Check if files are uploaded to InfinityFree.`);
+        }
+        
+        // ✅ Check for InfinityFree anti-bot challenge
+        if (text.includes('toNumbers') && text.includes('slowAES') && text.includes('location.href')) {
+            console.warn('⚠️ InfinityFree anti-bot detected!');
+            
+            // Extract redirect URL
+            const redirectMatch = text.match(/location\.href="([^"]+)"/);
+            if (redirectMatch && retryCount < 3) {
+                const redirectUrl = redirectMatch[1];
+                console.log(`🔄 Following InfinityFree redirect: ${redirectUrl}`);
+                
+                // Wait a bit and retry with the redirect URL
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Parse the new endpoint from redirect URL
+                const urlObj = new URL(redirectUrl);
+                const newEndpoint = urlObj.pathname.replace('/deploy/api/', '') + urlObj.search;
+                
+                return apiCall(newEndpoint, options, retryCount + 1);
+            } else if (retryCount >= 3) {
+                throw new Error('InfinityFree anti-bot protection active. Please access the site from InfinityFree domain: https://hcthegreat.ct.ws/deploy/frontend/');
+            }
         }
         
         // Check for InfinityFree redirect
