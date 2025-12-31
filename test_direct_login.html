@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Login Test</title>
+</head>
+<body>
+    <h2>Student Login Test</h2>
+    <form id="studentForm">
+        <input type="text" name="username" value="test_student" /><br>
+        <input type="password" name="password" value="password123" /><br>
+        <button type="submit">Test Student Login</button>
+    </form>
+    <pre id="studentResult"></pre>
+
+    <h2>Faculty Login Test</h2>
+    <form id="facultyForm">
+        <input type="text" name="username" value="test_faculty" /><br>
+        <input type="password" name="password" value="password123" /><br>
+        <button type="submit">Test Faculty Login</button>
+    </form>
+    <pre id="facultyResult"></pre>
+
+    <script>
+        document.getElementById('studentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {username: 'test_student', password: 'password123'};
+            try {
+                const response = await fetch('/Hansil/PHP-Attendance-System/api/stud_login.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const text = await response.text();
+                document.getElementById('studentResult').textContent = 
+                    `Status: ${response.status}\n\n${text}`;
+            } catch (e) {
+                document.getElementById('studentResult').textContent = 'Error: ' + e;
+            }
+        });
+
+        document.getElementById('facultyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {username: 'test_faculty', password: 'password123'};
+            try {
+                const response = await fetch('/Hansil/PHP-Attendance-System/api/faculty_login.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const text = await response.text();
+                document.getElementById('facultyResult').textContent = 
+                    `Status: ${response.status}\n\n${text}`;
+            } catch (e) {
+                document.getElementById('facultyResult').textContent = 'Error: ' + e;
+            }
+        });
+    </script>
+</body>
+</html>
