@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfinityFree API Checker</title>
+    <style>
+        body { font-family: monospace; max-width: 1000px; margin: 50px auto; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        h1 { color: #4ec9b0; }
+        .test { background: #252526; padding: 15px; margin: 15px 0; border-left: 4px solid #007acc; }
+        .success { border-left-color: #4ec9b0; }
+        .error { border-left-color: #f48771; }
+        button { background: #007acc; color: white; padding: 10px 20px; border: none; cursor: pointer; margin: 5px; }
+        button:hover { background: #005a9e; }
+        pre { background: #1e1e1e; padding: 10px; overflow-x: auto; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #3c3c3c; border: 1px solid #555; color: #d4d4d4; }
+    </style>
+</head>
+<body>
+    <h1>🔍 InfinityFree API Diagnostic Tool</h1>
+    
+    <div class="test">
+        <h3>Enter your InfinityFree URL:</h3>
+        <input type="text" id="baseUrl" placeholder="https://yoursite.infinityfreeapp.com" value="">
+        <button onclick="runAllTests()">🧪 Run All Tests</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const endpoints = [
+            'api/stud_login.php',
+            'api/faculty_login.php',
+            'api/register_user.php',
+            'api/display_profile.php',
+            'api/show_attendance.php',
+            'api/mark_present.php',
+            'api/generate_id.php'
+        ];
+
+        async function testEndpoint(baseUrl, endpoint) {
+            const url = `${baseUrl}/${endpoint}`;
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test';
+            
+            try {
+                console.log(`Testing: ${url}`);
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                const text = await response.text();
+                
+                if (response.status === 404) {
+                    resultDiv.className = 'test error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ ${endpoint}</h3>
+                        <p><strong>Status:</strong> 404 NOT FOUND</p>
+                        <p><strong>Problem:</strong> File not uploaded or wrong path!</p>
+                        <p><strong>URL:</strong> <a href="${url}" target="_blank">${url}</a></p>
+                    `;
+                } else if (response.status === 200 || response.status === 405) {
+                    resultDiv.className = 'test success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ ${endpoint}</h3>
+                        <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                        <p><strong>Response (first 500 chars):</strong></p>
+                        <pre>${text.substring(0, 500)}</pre>
+                        ${response.status === 405 ? '<p>✅ 405 is OK! Means file exists but needs POST request.</p>' : ''}
+                    `;
+                } else {
+                    resultDiv.className = 'test error';
+                    resultDiv.innerHTML = `
+                        <h3>⚠️ ${endpoint}</h3>
+                        <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                        <p><strong>Response:</strong></p>
+                        <pre>${text.substring(0, 500)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'test error';
+                resultDiv.innerHTML = `
+                    <h3>❌ ${endpoint}</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>URL:</strong> ${url}</p>
+                    <p><strong>Possible causes:</strong></p>
+                    <ul>
+                        <li>File not uploaded to InfinityFree</li>
+                        <li>Wrong folder structure</li>
+                        <li>CORS blocked (try from InfinityFree domain)</li>
+                    </ul>
+                `;
+            }
+            
+            return resultDiv;
+        }
+
+        async function runAllTests() {
+            const baseUrl = document.getElementById('baseUrl').value.trim().replace(/\/$/, '');
+            
+            if (!baseUrl) {
+                alert('Please enter your InfinityFree URL!');
+                return;
+            }
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="test"><h3>🔄 Testing endpoints...</h3></div>';
+            
+            // Test base URL first
+            const baseTest = document.createElement('div');
+            baseTest.className = 'test';
+            baseTest.innerHTML = `<h3>Testing base URL: ${baseUrl}</h3>`;
+            resultsDiv.appendChild(baseTest);
+            
+            try {
+                const baseResponse = await fetch(baseUrl);
+                baseTest.innerHTML += `<p>✅ Base URL accessible (${baseResponse.status})</p>`;
+            } catch (error) {
+                baseTest.className = 'test error';
+                baseTest.innerHTML += `<p>❌ Cannot reach base URL: ${error.message}</p>`;
+                return;
+            }
+            
+            // Test each endpoint
+            resultsDiv.innerHTML = '';
+            for (const endpoint of endpoints) {
+                const result = await testEndpoint(baseUrl, endpoint);
+                resultsDiv.appendChild(result);
+                await new Promise(r => setTimeout(r, 500)); // Rate limit
+            }
+            
+            // Summary
+            const summary = document.createElement('div');
+            summary.className = 'test';
+            const successCount = resultsDiv.querySelectorAll('.success').length;
+            const totalCount = endpoints.length;
+            
+            if (successCount === totalCount) {
+                summary.className = 'test success';
+                summary.innerHTML = `
+                    <h2>🎉 All ${totalCount} endpoints are working!</h2>
+                    <p>Your API is properly deployed on InfinityFree.</p>
+                `;
+            } else {
+                summary.className = 'test error';
+                summary.innerHTML = `
+                    <h2>⚠️ ${successCount}/${totalCount} endpoints working</h2>
+                    <p><strong>Action needed:</strong> Upload missing API files to InfinityFree</p>
+                    <p><strong>Folder structure should be:</strong></p>
+                    <pre>htdocs/
+├── api/
+│   ├── stud_login.php
+│   ├── faculty_login.php
+│   ├── register_user.php
+│   ├── display_profile.php
+│   ├── show_attendance.php
+│   ├── mark_present.php
+│   └── generate_id.php
+└── backend/
+    ├── db_connect.php
+    ├── helpers.php
+    └── config.php</pre>
+                `;
+            }
+            
+            resultsDiv.insertBefore(summary, resultsDiv.firstChild);
+        }
+        
+        // Auto-detect if on InfinityFree
+        if (window.location.hostname.includes('infinityfreeapp.com') || 
+            window.location.hostname.includes('.ct.ws') ||
+            window.location.hostname.includes('.rf.gd')) {
+            document.getElementById('baseUrl').value = window.location.origin;
+        }
+    </script>
+</body>
+</html>

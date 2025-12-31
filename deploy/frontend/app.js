@@ -22,8 +22,14 @@ const STORAGE_KEYS = {
 // Clean InfinityFree response
 function cleanAPIResponse(responseText) {
     try {
-        // Log raw response for debugging
-        console.log('Raw API response:', responseText.substring(0, 200));
+        // Log FULL response for debugging
+        console.log('📥 Raw API response (full):', responseText);
+        
+        // Check if it's a 404 or error page
+        if (responseText.includes('404') || responseText.includes('Not Found') || responseText.includes('errors.infinityfree.net')) {
+            console.error('❌ 404 Error - API endpoint not found!');
+            throw new Error('API endpoint not found (404). Check if files are uploaded correctly.');
+        }
         
         // Remove BOM if present
         let cleaned = responseText.replace(/^\uFEFF/, '');
@@ -42,24 +48,30 @@ function cleanAPIResponse(responseText) {
         
         if (firstBrace !== -1 && lastBrace !== -1) {
             cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+        } else {
+            console.error('❌ No JSON found in response!');
+            console.error('Cleaned text:', cleaned);
+            throw new Error('No JSON data found in response. Got: ' + cleaned.substring(0, 100));
         }
         
         // Trim again after extraction
         cleaned = cleaned.trim();
         
-        console.log('Cleaned JSON:', cleaned.substring(0, 200));
+        console.log('✅ Cleaned JSON:', cleaned.substring(0, 200));
         
         return JSON.parse(cleaned);
     } catch (error) {
-        console.error('Failed to clean API response:', error);
-        console.error('Response text (first 500 chars):', responseText.substring(0, 500));
-        throw new Error('Invalid API response format');
+        console.error('❌ Failed to clean API response:', error);
+        console.error('📄 Response text (first 1000 chars):', responseText.substring(0, 1000));
+        throw new Error('Invalid API response: ' + error.message);
     }
 }
 
 // API Call Function with InfinityFree handling
 async function apiCall(endpoint, options = {}, retryCount = 0) {
     const url = `${API_BASE_URL}/${endpoint}`;
+    
+    console.log(`🌐 API Call: ${url} (Attempt ${retryCount + 1})`);
     
     try {
         const response = await fetch(url, {
@@ -70,10 +82,19 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
             },
         });
         
+        console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+        
         const text = await response.text();
+        
+        // Check for 404 error
+        if (response.status === 404) {
+            console.error('❌ 404 Not Found:', url);
+            throw new Error(`API endpoint not found: ${endpoint}. Check if files are uploaded to InfinityFree.`);
+        }
         
         // Check for InfinityFree redirect
         if (text.includes('location.href') && text.includes('?i=1') && retryCount < 2) {
+            console.log('🔄 InfinityFree redirect detected, retrying...');
             await new Promise(resolve => setTimeout(resolve, 1000));
             const newUrl = url.includes('?') ? `${url}&i=1` : `${url}?i=1`;
             return apiCall(endpoint + (url.includes('?') ? '&i=1' : '?i=1'), options, retryCount + 1);
@@ -87,7 +108,10 @@ async function apiCall(endpoint, options = {}, retryCount = 0) {
             data: data,
         };
     } catch (error) {
+        console.error('❌ API Call failed:', error.message);
+        
         if (error.message.includes('Invalid API response') && retryCount < 2 && !url.includes('?i=1')) {
+            console.log('🔄 Retrying with ?i=1 parameter...');
             await new Promise(resolve => setTimeout(resolve, 1000));
             return apiCall(endpoint + '?i=1', options, retryCount + 1);
         }
