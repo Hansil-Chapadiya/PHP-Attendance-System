@@ -380,3 +380,69 @@ body {
     width: 24px;
     height: 24px;
 }
+
+/* Register Page Styles */
+.role-selector {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    justify-content: center;
+}
+
+.role-selector label {
+    cursor: pointer;
+    flex: 1;
+}
+
+.role-selector input[type="radio"] {
+    display: none;
+}
+
+.role-badge {
+    display: block;
+    padding: 15px 20px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    background: var(--bg-primary);
+}
+
+.role-badge:hover {
+    border-color: var(--primary);
+    background: var(--bg-secondary);
+}
+
+.role-selector input[type="radio"]:checked + .role-badge {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+}
+
+.subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-8);
+    font-size: var(--font-size-base);
+}
+
+#studentFields {
+    display: block;
+}
+
+select {
+    width: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    background: var(--bg-primary);
+    cursor: pointer;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
