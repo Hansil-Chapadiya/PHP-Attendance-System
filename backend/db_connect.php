@@ -1,13 +1,23 @@
 <?php
-// Load configuration
-$config = require_once __DIR__ . '/config.php';
+// Load configuration - supports both config file and environment variables
+$config_file = __DIR__ . '/config.php';
 
-// Extract database configuration
-$host = $config['database']['host'];
-$db_name = $config['database']['name'];
-$username = $config['database']['user'];
-$password = $config['database']['password'];
-$port = $config['database']['port'];
+if (file_exists($config_file)) {
+    // Local development - use config.php
+    $config = require_once $config_file;
+    $host = $config['database']['host'];
+    $db_name = $config['database']['name'];
+    $username = $config['database']['user'];
+    $password = $config['database']['password'];
+    $port = $config['database']['port'];
+} else {
+    // Production (Vercel) - use environment variables directly
+    $host = getenv('DB_HOST') ?: 'localhost';
+    $db_name = getenv('DB_NAME') ?: '';
+    $username = getenv('DB_USER') ?: '';
+    $password = getenv('DB_PASSWORD') ?: '';
+    $port = getenv('DB_PORT') ?: 3306;
+}
 
 // Create mysqli connection
 $conn = mysqli_connect($host, $username, $password, $db_name, $port);

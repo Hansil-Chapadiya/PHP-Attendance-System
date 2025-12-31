@@ -8,7 +8,41 @@ class Auth {
     private static $config;
     
     public static function init() {
-        self::$config = require __DIR__ . '/config.php';
+        $config_file = __DIR__ . '/config.php';
+        
+        if (file_exists($config_file)) {
+            // Local development - use config.php
+            self::$config = require $config_file;
+        } else {
+            // Production (Vercel) - build config from environment variables
+            self::$config = [
+                'database' => [
+                    'host' => getenv('DB_HOST') ?: 'localhost',
+                    'name' => getenv('DB_NAME') ?: '',
+                    'user' => getenv('DB_USER') ?: '',
+                    'password' => getenv('DB_PASSWORD') ?: '',
+                    'port' => getenv('DB_PORT') ?: 3306
+                ],
+                'jwt' => [
+                    'secret_key' => getenv('JWT_SECRET') ?: 'change-this-secret',
+                    'algorithm' => 'HS256',
+                    'expiry' => 86400
+                ],
+                'session' => [
+                    'lifetime' => 86400,
+                    'secure' => true,
+                    'httponly' => true,
+                    'samesite' => 'Strict'
+                ],
+                'class' => [
+                    'session_duration' => 7200
+                ],
+                'rate_limit' => [
+                    'max_attempts' => 5,
+                    'lockout_time' => 900
+                ]
+            ];
+        }
         
         // Start session if not already started
         if (session_status() === PHP_SESSION_NONE) {
