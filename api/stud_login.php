@@ -1,4 +1,7 @@
 <?php
+// Clean any BOM or whitespace that might be in included files
+ob_start();
+
 // CORS headers FIRST (before any other code)
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -6,12 +9,12 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Access-Control-Max-Age: 86400');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    ob_end_clean();
     http_response_code(200);
     exit;
 }
 
-// Prevent output buffering and force JSON
-while (ob_get_level()) ob_end_clean();
+// Force JSON content type
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 
@@ -23,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $input = json_decode(file_get_contents("php://input"), true);
 
     if (!isset($input['username']) || !isset($input['password'])) {
+        ob_end_clean();
         http_response_code(400);
         echo json_encode(['status' => 'error', 'message' => 'Username and password are required']);
         exit;
@@ -34,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Validate input
     $usernameValidation = Validator::validateUsername($username);
     if (!$usernameValidation['valid']) {
+        ob_end_clean();
         http_response_code(400);
         echo json_encode(['status' => 'error', 'message' => $usernameValidation['message']]);
         exit;
@@ -43,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $ip = NetworkHelper::getClientIP();
     $limitCheck = RateLimiter::checkLimit($ip . '_login', $conn);
     if (!$limitCheck['allowed']) {
+        ob_end_clean();
         http_response_code(429);
         echo json_encode(['status' => 'error', 'message' => $limitCheck['message']]);
         exit;
@@ -64,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $token = Auth::generateToken($user['user_id'], $user['username'], $user['role']);
 
             // Success - don't record rate limit attempt
+            ob_end_clean();
             http_response_code(200);
             echo json_encode([
                 'status' => 'success',
@@ -76,18 +83,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             // Record failed attempt
             RateLimiter::recordAttempt($ip . '_login', $conn);
+            ob_end_clean();
             http_response_code(401);
             echo json_encode(['status' => 'error', 'message' => 'Invalid credentials']);
         }
     } else {
         // Record failed attempt
         RateLimiter::recordAttempt($ip . '_login', $conn);
+        ob_end_clean();
         http_response_code(401);
         echo json_encode(['status' => 'error', 'message' => 'Invalid credentials']);
     }
     
     $stmt->close();
 } else {
+    ob_end_clean();
     http_response_code(405);
     echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
 }
