@@ -1,0 +1,28 @@
+# Disable InfinityFree tracking for API endpoints
+<Files *.php>
+    php_flag display_errors Off
+    php_value error_reporting 0
+</Files>
+
+# Force JSON content type for API responses
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+</IfModule>
+
+# Disable HTML output buffering
+php_flag output_buffering Off
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set Content-Type "application/json; charset=utf-8"
+</IfModule>
+
+# Allow CORS
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+</IfModule>

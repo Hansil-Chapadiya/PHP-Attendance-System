@@ -1,4 +1,9 @@
 <?php
+// Prevent output buffering and force JSON
+while (ob_get_level()) ob_end_clean();
+header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
+
 require_once __DIR__ . '/../backend/helpers.php';
 require_once __DIR__ . '/../backend/db_connect.php';
 
