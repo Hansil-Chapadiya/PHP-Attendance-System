@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Attendance System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h1>Create Account</h1>
+            <p class="subtitle">Register for Attendance System</p>
+            
+            <div id="alertMessage" class="alert" style="display: none;"></div>
+            
+            <form id="registerForm">
+                <!-- User Type Selection -->
+                <div class="role-selector">
+                    <label>
+                        <input type="radio" name="role" value="student" checked onchange="toggleRoleFields()">
+                        <span class="role-badge student">👨‍🎓 Student</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="role" value="faculty" onchange="toggleRoleFields()">
+                        <span class="role-badge faculty">👨‍🏫 Faculty</span>
+                    </label>
+                </div>
+
+                <!-- Common Fields -->
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required 
+                           placeholder="Enter username (3-50 characters)" minlength="3" maxlength="50">
+                    <small>Only letters, numbers, and underscores allowed</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" required 
+                           placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Enter password (min 8 characters)" minlength="8">
+                    <small>Must contain uppercase, lowercase, and number</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required 
+                           placeholder="Re-enter password">
+                </div>
+
+                <div class="form-group">
+                    <label for="branch">Branch</label>
+                    <select id="branch" name="branch" required>
+                        <option value="">Select Branch</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Mechanical">Mechanical</option>
+                        <option value="Civil">Civil</option>
+                    </select>
+                </div>
+
+                <!-- Student-only Fields -->
+                <div id="studentFields">
+                    <div class="form-group">
+                        <label for="division">Division</label>
+                        <select id="division" name="division">
+                            <option value="">Select Division</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="semester">Semester</label>
+                        <select id="semester" name="semester">
+                            <option value="">Select Semester</option>
+                            <option value="1">1st Semester</option>
+                            <option value="2">2nd Semester</option>
+                            <option value="3">3rd Semester</option>
+                            <option value="4">4th Semester</option>
+                            <option value="5">5th Semester</option>
+                            <option value="6">6th Semester</option>
+                            <option value="7">7th Semester</option>
+                            <option value="8">8th Semester</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="registerBtn">
+                    Create Account
+                </button>
+
+                <div class="form-footer">
+                    Already have an account? <a href="login.html">Login here</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="register.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+RewriteEngine On
+
+# CRITICAL: Pass Authorization header to PHP (InfinityFree fix)
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Alternative: Set environment variable for Authorization
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+# DISABLE CACHE - Force latest files (InfinityFree fix)
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+</IfModule>
+
+# PHP files should NEVER be cached
+<FilesMatch "\.(php)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+</FilesMatch>
+
+# Pass Authorization header to PHP
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Enable CORS for all requests
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+
+# Handle preflight OPTIONS requests
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# Route mappings to match vercel.json
+RewriteRule ^student/login$ api/stud_login.php [L]
+RewriteRule ^student/register$ api/register_user.php [L]
+RewriteRule ^student/info$ api/display_profile.php [L]
+RewriteRule ^student/attendance$ api/show_attendance.php [L]
+RewriteRule ^student/mark$ api/mark_present.php [L]
+RewriteRule ^faculty/login$ api/faculty_login.php [L]
+RewriteRule ^faculty/generate_id$ api/generate_id.php [L]
+
+# Fallback to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L]

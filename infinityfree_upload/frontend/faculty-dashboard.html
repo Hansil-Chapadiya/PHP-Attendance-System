@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Faculty</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header style="background: var(--bg-primary); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;">
+        <div class="container" style="padding-top: var(--space-4); padding-bottom: var(--space-4);">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 style="font-size: var(--font-size-lg); font-weight: 600;">Faculty Dashboard</h1>
+                </div>
+                <button class="btn btn-outline" id="logoutBtn" style="padding: var(--space-2) var(--space-4);">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container container-md" style="padding-top: var(--space-8); padding-bottom: var(--space-8);">
+        
+        <!-- Welcome Section -->
+        <div class="card mb-6">
+            <h2 style="font-size: var(--font-size-2xl); font-weight: 600; margin-bottom: var(--space-2);">
+                Welcome, <span id="facultyName">Professor</span> 👨‍🏫
+            </h2>
+            <p class="text-secondary">Manage attendance sessions for your classes</p>
+        </div>
+
+        <!-- Start New Session -->
+        <div class="card mb-6">
+            <h3 style="font-size: var(--font-size-lg); font-weight: 600; margin-bottom: var(--space-4);">
+                Start Attendance Session
+            </h3>
+            <form id="startSessionForm">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="form-group" style="margin: 0;">
+                        <label for="branch" class="form-label">Branch</label>
+                        <input 
+                            type="text" 
+                            id="branch" 
+                            class="form-input" 
+                            placeholder="e.g., CS"
+                            required
+                        >
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label for="division" class="form-label">Division</label>
+                        <input 
+                            type="text" 
+                            id="division" 
+                            class="form-input" 
+                            placeholder="e.g., A"
+                            required
+                        >
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="startSessionBtn">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Start Session
+                </button>
+            </form>
+        </div>
+
+        <!-- Alert Message -->
+        <div id="alertMessage" style="display: none;"></div>
+
+        <!-- Active Session Card -->
+        <div class="card mb-6" id="activeSessionCard" style="display: none; background: #f0fdf4; border-color: #86efac;">
+            <div class="flex items-center justify-between mb-4">
+                <h3 style="font-size: var(--font-size-lg); font-weight: 600;">Active Session</h3>
+                <span class="badge badge-success">
+                    <span class="status-dot status-dot-success"></span>
+                    Live
+                </span>
+            </div>
+            
+            <!-- Class ID Display -->
+            <div style="background: white; padding: var(--space-6); border-radius: var(--radius-md); text-align: center; margin-bottom: var(--space-4); border: 2px dashed var(--success);">
+                <p class="text-secondary mb-2" style="font-size: var(--font-size-sm);">Share this Class ID with students</p>
+                <div style="font-size: var(--font-size-3xl); font-weight: 700; color: var(--primary); letter-spacing: 2px; margin: var(--space-4) 0;" id="classIdDisplay">
+                    -
+                </div>
+                <button class="btn btn-outline" id="copyIdBtn" style="font-size: var(--font-size-sm);">
+                    <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                        <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    Copy ID
+                </button>
+            </div>
+
+            <!-- Session Info -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-secondary" style="font-size: var(--font-size-sm);">Branch</p>
+                    <p style="font-weight: 500;" id="sessionBranch">-</p>
+                </div>
+                <div>
+                    <p class="text-secondary" style="font-size: var(--font-size-sm);">Division</p>
+                    <p style="font-weight: 500;" id="sessionDivision">-</p>
+                </div>
+                <div>
+                    <p class="text-secondary" style="font-size: var(--font-size-sm);">Expires At</p>
+                    <p style="font-weight: 500;" id="sessionExpiry">-</p>
+                </div>
+                <div>
+                    <p class="text-secondary" style="font-size: var(--font-size-sm);">Students Marked</p>
+                    <p style="font-weight: 500; color: var(--success);" id="studentCount">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Sessions -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 style="font-size: var(--font-size-lg); font-weight: 600;">Recent Sessions</h3>
+                <button class="btn btn-outline" style="padding: var(--space-2) var(--space-4);">
+                    <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                        <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Export All
+                </button>
+            </div>
+            <div id="recentSessions">
+                <!-- Loading skeleton -->
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script src="faculty-dashboard.js"></script>
+</body>
+</html>
