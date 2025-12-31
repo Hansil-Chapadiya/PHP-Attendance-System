@@ -1,4 +1,15 @@
 <?php
+// CORS headers FIRST (before any other code)
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Max-Age: 86400');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 // Prevent output buffering and force JSON
 while (ob_get_level()) ob_end_clean();
 header('Content-Type: application/json; charset=utf-8');
@@ -6,9 +17,6 @@ header('X-Content-Type-Options: nosniff');
 
 require_once __DIR__ . '/../backend/helpers.php';
 require_once __DIR__ . '/../backend/db_connect.php';
-
-// Handle CORS
-CORSHelper::handleCORS();
 
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     // Require authentication
