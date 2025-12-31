@@ -1,5 +1,16 @@
 // Main App Configuration
-const API_BASE_URL = 'https://hcthegreat.ct.ws/api';
+// Auto-detect environment: use production URL if on production domain, otherwise use local
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// For local development, use the current port if running from file system,
+// otherwise detect from window.location
+let localPort = window.location.port || '80';
+const API_BASE_URL = isLocalhost 
+    ? `http://localhost:${localPort}/Hansil/PHP-Attendance-System/api`
+    : 'https://hcthegreat.ct.ws/api';
+
+console.log('API Base URL:', API_BASE_URL);
+
 
 // Storage Keys
 const STORAGE_KEYS = {
@@ -11,10 +22,21 @@ const STORAGE_KEYS = {
 // Clean InfinityFree response
 function cleanAPIResponse(responseText) {
     try {
-        let cleaned = responseText.replace(/<script[\s\S]*?<\/script>/gi, '');
+        // Log raw response for debugging
+        console.log('Raw API response:', responseText.substring(0, 200));
+        
+        // Remove BOM if present
+        let cleaned = responseText.replace(/^\uFEFF/, '');
+        
+        // Trim whitespace
+        cleaned = cleaned.trim();
+        
+        // Remove HTML tags from InfinityFree
+        cleaned = cleaned.replace(/<script[\s\S]*?<\/script>/gi, '');
         cleaned = cleaned.replace(/<noscript[\s\S]*?<\/noscript>/gi, '');
         cleaned = cleaned.replace(/<\/?[^>]+(>|$)/g, '');
         
+        // Extract JSON from response
         const firstBrace = cleaned.indexOf('{');
         const lastBrace = cleaned.lastIndexOf('}');
         
@@ -22,9 +44,15 @@ function cleanAPIResponse(responseText) {
             cleaned = cleaned.substring(firstBrace, lastBrace + 1);
         }
         
+        // Trim again after extraction
+        cleaned = cleaned.trim();
+        
+        console.log('Cleaned JSON:', cleaned.substring(0, 200));
+        
         return JSON.parse(cleaned);
     } catch (error) {
         console.error('Failed to clean API response:', error);
+        console.error('Response text (first 500 chars):', responseText.substring(0, 500));
         throw new Error('Invalid API response format');
     }
 }

@@ -1,9 +1,14 @@
 <?php
-// Main index.php file for Vercel deployment
-header("Content-Type: application/json");
+// Version: 2024-12-31-v2 - LATEST UPDATE
+// Force cache clear - InfinityFree deployment
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
 
-// Basic Routing Logic
-$request_uri = $_SERVER['REQUEST_URI'];
+// Redirect to login page
+header('Location: /frontend/login.html');
+exit;
+?>
 
 // Include the backend logic based on the requested URL
 if (preg_match("/student\/login/", $request_uri)) {
