@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tester - Attendance System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #0891b2;
+            margin-bottom: 30px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0891b2;
+        }
+        button {
+            background: #0891b2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        button:hover {
+            background: #0e7490;
+        }
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .output {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+        .label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Production API Tester</h1>
+        
+        <div class="grid">
+            <!-- Register User -->
+            <div class="card">
+                <h3>1. Register User</h3>
+                <label class="label">Username</label>
+                <input type="text" id="regUsername" placeholder="test123">
+                <label class="label">Password</label>
+                <input type="password" id="regPassword" placeholder="test123">
+                <label class="label">Role</label>
+                <select id="regRole">
+                    <option value="student">Student</option>
+                    <option value="faculty">Faculty</option>
+                </select>
+                <label class="label">Full Name (Optional)</label>
+                <input type="text" id="regFullName" placeholder="John Doe">
+                <button onclick="testRegister()">Register</button>
+            </div>
+
+            <!-- Student Login -->
+            <div class="card">
+                <h3>2. Student Login</h3>
+                <label class="label">Username</label>
+                <input type="text" id="studUsername" placeholder="test123">
+                <label class="label">Password</label>
+                <input type="password" id="studPassword" placeholder="test123">
+                <button onclick="testStudentLogin()">Login as Student</button>
+            </div>
+
+            <!-- Faculty Login -->
+            <div class="card">
+                <h3>3. Faculty Login</h3>
+                <label class="label">Username</label>
+                <input type="text" id="facUsername" placeholder="faculty123">
+                <label class="label">Password</label>
+                <input type="password" id="facPassword" placeholder="faculty123">
+                <button onclick="testFacultyLogin()">Login as Faculty</button>
+            </div>
+
+            <!-- Generate Class ID -->
+            <div class="card">
+                <h3>4. Generate Class ID</h3>
+                <label class="label">Branch</label>
+                <input type="text" id="genBranch" placeholder="CSE">
+                <label class="label">Division</label>
+                <input type="text" id="genDivision" placeholder="A">
+                <button onclick="testGenerateID()" id="genBtn" disabled>Generate ID (Login First)</button>
+            </div>
+
+            <!-- Mark Attendance -->
+            <div class="card">
+                <h3>5. Mark Attendance</h3>
+                <label class="label">Class ID</label>
+                <input type="text" id="markClassId" placeholder="Enter Class ID from step 4">
+                <button onclick="testMarkAttendance()" id="markBtn" disabled>Mark Present (Login First)</button>
+            </div>
+
+            <!-- Show Attendance -->
+            <div class="card">
+                <h3>6. Show Attendance</h3>
+                <button onclick="testShowAttendance()" id="showBtn" disabled>Show My Attendance (Login First)</button>
+            </div>
+
+            <!-- Display Profile -->
+            <div class="card">
+                <h3>7. Display Profile</h3>
+                <button onclick="testDisplayProfile()" id="profileBtn" disabled>Get My Profile (Login First)</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📋 Test Output</h3>
+            <div id="output" class="output">Ready to test...\nClick any test button above to begin.\n\n💡 Tips:\n- Start with Register User\n- Then Login to get JWT token\n- Other tests require authentication\n</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://hcthegreat.ct.ws/api/';
+        let authToken = null;
+        const output = document.getElementById('output');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'success' ? '✅' : type === 'error' ? '❌' : '📡';
+            output.innerHTML += `\n[${timestamp}] ${prefix} ${message}`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            output.innerHTML = '';
+        }
+
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const url = API_BASE + endpoint;
+                log(`Calling: ${endpoint}`, 'info');
+
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+
+                let text = await response.text();
+                
+                // Clean InfinityFree injection
+                text = text.replace(/<script[\s\S]*?<\/script>/gi, '');
+                text = text.replace(/<noscript[\s\S]*?<\/noscript>/gi, '');
+                text = text.replace(/<!--[\s\S]*?-->/g, '');
+                text = text.trim();
+
+                const data = JSON.parse(text);
+                
+                log(`Response: ${JSON.stringify(data, null, 2)}`, data.status === 'success' ? 'success' : 'error');
+                
+                return data;
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        function enableAuthButtons() {
+            document.getElementById('genBtn').disabled = false;
+            document.getElementById('markBtn').disabled = false;
+            document.getElementById('showBtn').disabled = false;
+            document.getElementById('profileBtn').disabled = false;
+        }
+
+        async function testRegister() {
+            clearOutput();
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+            const full_name = document.getElementById('regFullName').value;
+
+            await apiCall('register_user.php', {
+                method: 'POST',
+                body: JSON.stringify({ username, password, role, full_name })
+            });
+        }
+
+        async function testStudentLogin() {
+            clearOutput();
+            const username = document.getElementById('studUsername').value;
+            const password = document.getElementById('studPassword').value;
+
+            const result = await apiCall('stud_login.php', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+
+            if (result.status === 'success') {
+                authToken = result.token;
+                log(`✅ Token saved: ${authToken.substring(0, 20)}...`, 'success');
+                enableAuthButtons();
+            }
+        }
+
+        async function testFacultyLogin() {
+            clearOutput();
+            const username = document.getElementById('facUsername').value;
+            const password = document.getElementById('facPassword').value;
+
+            const result = await apiCall('faculty_login.php', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+
+            if (result.status === 'success') {
+                authToken = result.token;
+                log(`✅ Token saved: ${authToken.substring(0, 20)}...`, 'success');
+                enableAuthButtons();
+            }
+        }
+
+        async function testGenerateID() {
+            clearOutput();
+            const branch = document.getElementById('genBranch').value;
+            const division = document.getElementById('genDivision').value;
+
+            const result = await apiCall('generate_id.php', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ branch, division })
+            });
+
+            if (result.status === 'success') {
+                log(`\n📋 Class ID: ${result.class_id}`, 'success');
+                log(`Copy this ID for Mark Attendance test`, 'info');
+                document.getElementById('markClassId').value = result.class_id;
+            }
+        }
+
+        async function testMarkAttendance() {
+            clearOutput();
+            const class_id = document.getElementById('markClassId').value;
+
+            await apiCall('mark_present.php', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ class_id })
+            });
+        }
+
+        async function testShowAttendance() {
+            clearOutput();
+            await apiCall('show_attendance.php', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+        }
+
+        async function testDisplayProfile() {
+            clearOutput();
+            await apiCall('display_profile.php', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+        }
+    </script>
+</body>
+</html>

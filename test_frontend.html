@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System - Test Frontend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .card.active {
+            display: block;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .response.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+
+        .response.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+
+        .response.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            display: block;
+        }
+
+        .response pre {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+
+        .profile-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .profile-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .profile-item label {
+            font-weight: 600;
+            color: #666;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .profile-item span {
+            color: #333;
+            font-size: 18px;
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .attendance-table th,
+        .attendance-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .attendance-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .attendance-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-badge.present {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .class-id-display {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .class-id-display .id {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 10px 0;
+            letter-spacing: 2px;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            margin-top: 10px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Attendance System</h1>
+            <p>API Testing Interface - InfinityFree Backend</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('student-login')">Student Login</button>
+            <button class="tab-btn" onclick="showTab('faculty-login')">Faculty Login</button>
+            <button class="tab-btn" onclick="showTab('register')">Register</button>
+            <button class="tab-btn" onclick="showTab('profile')" id="profileTab" style="display:none">Profile</button>
+            <button class="tab-btn" onclick="showTab('attendance')" id="attendanceTab" style="display:none">Attendance</button>
+            <button class="tab-btn" onclick="showTab('generate')" id="generateTab" style="display:none">Generate Class</button>
+            <button class="tab-btn" onclick="showTab('mark')" id="markTab" style="display:none">Mark Present</button>
+        </div>
+
+        <!-- Student Login -->
+        <div class="card active" id="student-login">
+            <h2>🎓 Student Login</h2>
+            <form onsubmit="studentLogin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="stud-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="stud-password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <div class="response" id="stud-login-response"></div>
+        </div>
+
+        <!-- Faculty Login -->
+        <div class="card" id="faculty-login">
+            <h2>👨‍🏫 Faculty Login</h2>
+            <form onsubmit="facultyLogin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="fac-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="fac-password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <div class="response" id="fac-login-response"></div>
+        </div>
+
+        <!-- Register -->
+        <div class="card" id="register">
+            <h2>📝 Register New User</h2>
+            <form onsubmit="registerUser(event)">
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="reg-role" onchange="toggleRoleFields()" required>
+                        <option value="student">Student</option>
+                        <option value="faculty">Faculty</option>
+                    </select>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="reg-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="reg-fullname" required>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="reg-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Branch</label>
+                        <input type="text" id="reg-branch" placeholder="e.g., Computer Science" required>
+                    </div>
+                </div>
+                <div class="grid-2" id="student-fields">
+                    <div class="form-group">
+                        <label>Division</label>
+                        <input type="text" id="reg-division" placeholder="e.g., A">
+                    </div>
+                    <div class="form-group">
+                        <label>Semester</label>
+                        <input type="number" id="reg-semester" min="1" max="8" placeholder="1-8">
+                    </div>
+                </div>
+                <button type="submit" class="btn">Register</button>
+            </form>
+            <div class="response" id="register-response"></div>
+        </div>
+
+        <!-- Profile -->
+        <div class="card" id="profile">
+            <h2>👤 My Profile</h2>
+            <div id="profile-content">
+                <p>Loading profile...</p>
+            </div>
+            <button class="btn logout-btn" onclick="logout()">Logout</button>
+            <div class="response" id="profile-response"></div>
+        </div>
+
+        <!-- Attendance History -->
+        <div class="card" id="attendance">
+            <h2>📊 Attendance History</h2>
+            <div id="attendance-content">
+                <p>Loading attendance...</p>
+            </div>
+            <div class="response" id="attendance-response"></div>
+        </div>
+
+        <!-- Generate Class ID -->
+        <div class="card" id="generate">
+            <h2>🎯 Generate Class Session</h2>
+            <form onsubmit="generateClassId(event)">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Branch</label>
+                        <input type="text" id="gen-branch" placeholder="e.g., CS" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Division</label>
+                        <input type="text" id="gen-division" placeholder="e.g., A" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Generate Class ID</button>
+            </form>
+            <div id="class-id-display"></div>
+            <div class="response" id="generate-response"></div>
+        </div>
+
+        <!-- Mark Attendance -->
+        <div class="card" id="mark">
+            <h2>✅ Mark Attendance</h2>
+            <form onsubmit="markAttendance(event)">
+                <div class="form-group">
+                    <label>Class ID</label>
+                    <input type="text" id="mark-classid" placeholder="Enter class ID from faculty" required>
+                </div>
+                <button type="submit" class="btn">Mark Present</button>
+            </form>
+            <div class="response" id="mark-response"></div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+</body>
+</html>
