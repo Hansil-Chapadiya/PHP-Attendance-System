@@ -115,6 +115,10 @@ $records = [];
 while ($row = $result->fetch_assoc()) {
     $date = $row['date'];
     $division = $row['division'];
+    $subject = $row['subject'] ?: 'No Subject'; // Handle null subjects
+    
+    // Create unique key for division + subject combination
+    $divisionKey = $division . '_' . $subject;
     
     if (!isset($records[$date])) {
         $records[$date] = [
@@ -124,16 +128,16 @@ while ($row = $result->fetch_assoc()) {
         ];
     }
     
-    if (!isset($records[$date]['divisions'][$division])) {
-        $records[$date]['divisions'][$division] = [
+    if (!isset($records[$date]['divisions'][$divisionKey])) {
+        $records[$date]['divisions'][$divisionKey] = [
             'division' => $division,
             'branch' => $row['branch'],
-            'subject' => $row['subject'],
+            'subject' => $subject,
             'students' => []
         ];
     }
     
-    $records[$date]['divisions'][$division]['students'][] = [
+    $records[$date]['divisions'][$divisionKey]['students'][] = [
         'name' => $row['student_name'],
         'username' => $row['student_username'],
         'semester' => $row['semester'],

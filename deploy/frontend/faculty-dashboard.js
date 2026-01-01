@@ -273,11 +273,19 @@ function populateFilters() {
     const divisions = new Set();
     const subjects = new Set();
     
+    console.log('📋 Populating filters from:', {
+        attendanceRecords: allAttendanceRecords.length,
+        hasSchedule: !!teachingScheduleData.schedule
+    });
+    
     // Get divisions and subjects from attendance records
     allAttendanceRecords.forEach(record => {
         record.divisions.forEach(div => {
             divisions.add(div.division);
-            if (div.subject) subjects.add(div.subject);
+            if (div.subject) {
+                subjects.add(div.subject);
+                console.log('  ✓ Added subject from attendance:', div.subject);
+            }
         });
     });
     
@@ -286,10 +294,18 @@ function populateFilters() {
         Object.values(teachingScheduleData.schedule).forEach(daySchedule => {
             daySchedule.forEach(classItem => {
                 if (classItem.division) divisions.add(classItem.division);
-                if (classItem.subject) subjects.add(classItem.subject);
+                if (classItem.subject) {
+                    subjects.add(classItem.subject);
+                    console.log('  ✓ Added subject from schedule:', classItem.subject);
+                }
             });
         });
     }
+    
+    console.log('📊 Filter options:', {
+        divisions: Array.from(divisions),
+        subjects: Array.from(subjects)
+    });
     
     // Populate division filter
     const divisionSelect = document.getElementById('filterDivision');
@@ -317,6 +333,12 @@ function displayAttendanceRecords(records) {
     const filterSubject = document.getElementById('filterSubject')?.value || '';
     const filterDate = document.getElementById('filterDate')?.value || '';
     
+    console.log('🎯 Displaying attendance records:', {
+        totalRecords: records.length,
+        filters: { division: filterDivision, subject: filterSubject, date: filterDate },
+        records: records
+    });
+    
     let filteredRecords = records;
     
     // Apply date filter
@@ -326,15 +348,21 @@ function displayAttendanceRecords(records) {
     
     let html = '';
     let hasVisibleRecords = false;
+    let totalStudents = 0;
+    let totalDivisions = new Set();
+    let totalSubjects = new Set();
     
     filteredRecords.forEach(record => {
         // Date header
         let dateHtml = `
-            <div style="margin-bottom: var(--space-6); border-left: 3px solid var(--primary); padding-left: var(--space-4);">
+            <div style="margin-bottom: var(--space-6); border-left: 4px solid var(--primary); padding-left: var(--space-4); padding-top: var(--space-2);">
                 <div style="margin-bottom: var(--space-3);">
-                    <h4 style="font-weight: 600; font-size: var(--font-size-base); margin-bottom: var(--space-1);">
-                        ${record.day_of_week} • ${formatDate(record.date)}
+                    <h4 style="font-weight: 700; font-size: var(--font-size-lg); margin-bottom: var(--space-1); color: var(--primary);">
+                        ${record.day_of_week}
                     </h4>
+                    <p style="color: var(--text-secondary); font-size: var(--font-size-sm);">
+                        ${formatDate(record.date)}
+                    </p>
                 </div>
         `;
         
@@ -342,24 +370,43 @@ function displayAttendanceRecords(records) {
         
         // Filter divisions
         const visibleDivisions = record.divisions.filter(div => {
-            if (filterDivision && div.division !== filterDivision) return false;
-            if (filterSubject && div.subject !== filterSubject) return false;
-            return true;
+            const divisionMatch = !filterDivision || div.division === filterDivision;
+            const subjectMatch = !filterSubject || div.subject === filterSubject;
+            
+            if (filterDivision || filterSubject) {
+                console.log('  🔍 Filter check:', {
+                    division: div.division,
+                    subject: div.subject,
+                    divisionMatch,
+                    subjectMatch,
+                    filters: { filterDivision, filterSubject }
+                });
+            }
+            
+            return divisionMatch && subjectMatch;
         });
         
         if (visibleDivisions.length > 0) {
             hasVisibleRecords = true;
             
             visibleDivisions.forEach(div => {
+                // Track statistics
+                totalStudents += div.students.length;
+                totalDivisions.add(div.division);
+                if (div.subject) totalSubjects.add(div.subject);
+                
                 divisionsHtml += `
-                    <div style="background: var(--bg-secondary); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-3);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
-                            <div>
-                                <span class="badge badge-primary" style="margin-right: var(--space-2);">Division ${div.division}</span>
-                                ${div.subject ? `<span class="badge" style="background: var(--info-light); color: var(--info); margin-right: var(--space-2);">${div.subject}</span>` : ''}
+                    <div style="background: var(--bg-secondary); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-3); border-left: 4px solid var(--primary);">
+                        <div style="margin-bottom: var(--space-3);">
+                            <div style="font-weight: 600; font-size: var(--font-size-md); margin-bottom: var(--space-2); color: var(--text-primary);">
+                                ${div.subject || 'No Subject'}
+                            </div>
+                            <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                                <span class="badge badge-primary">Division ${div.division}</span>
                                 <span class="badge" style="background: var(--success-light); color: var(--success);">
                                     ${div.students.length} ${div.students.length === 1 ? 'Student' : 'Students'}
                                 </span>
+                                ${div.branch ? `<span class="badge" style="background: var(--gray-200); color: var(--gray-700);">${div.branch}</span>` : ''}
                             </div>
                         </div>
                         
@@ -404,14 +451,64 @@ function displayAttendanceRecords(records) {
                 <svg class="icon icon-lg" viewBox="0 0 24 24" style="width: 48px; height: 48px; margin: 0 auto var(--space-4);">
                     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <p>No records match the selected filters</p>
+                <p style="font-weight: 600; font-size: var(--font-size-lg);">No records match the selected filters</p>
                 <p style="font-size: var(--font-size-sm); margin-top: var(--space-2);">
-                    Try adjusting your filter criteria
+                    Try adjusting your filter criteria or clearing all filters
                 </p>
+                ${(filterDivision || filterSubject || filterDate) ? `
+                <div style="margin-top: var(--space-4);">
+                    <button onclick="document.getElementById('clearFilters').click()" class="btn btn-primary">
+                        Clear All Filters
+                    </button>
+                </div>
+                ` : ''}
             </div>
         `;
     } else {
-        container.innerHTML = html;
+        // Add active filters indicator
+        let activeFiltersHtml = '';
+        const activeFilters = [];
+        if (filterDivision) activeFilters.push(`Division: ${filterDivision}`);
+        if (filterSubject) activeFilters.push(`Subject: ${filterSubject}`);
+        if (filterDate) activeFilters.push(`Date: ${formatDate(filterDate)}`);
+        
+        if (activeFilters.length > 0) {
+            activeFiltersHtml = `
+                <div style="background: var(--info-light); border-left: 4px solid var(--info); padding: var(--space-3); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-weight: 600; margin-right: var(--space-2);">🔍 Active Filters:</span>
+                            ${activeFilters.map(f => `<span class="badge" style="background: var(--info); color: white; margin-right: var(--space-2);">${f}</span>`).join('')}
+                        </div>
+                        <button onclick="document.getElementById('clearFilters').click()" class="btn btn-sm" style="padding: var(--space-1) var(--space-3); font-size: var(--font-size-sm);">
+                            Clear Filters
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Add summary banner
+        const summaryHtml = `
+            <div style="background: linear-gradient(135deg, var(--primary-light), var(--primary)); color: white; padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); text-align: center;">
+                    <div>
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700;">${totalStudents}</div>
+                        <div style="font-size: var(--font-size-sm); opacity: 0.9;">Total Students</div>
+                    </div>
+                    <div>
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700;">${totalDivisions.size}</div>
+                        <div style="font-size: var(--font-size-sm); opacity: 0.9;">Divisions</div>
+                    </div>
+                    <div>
+                        <div style="font-size: var(--font-size-2xl); font-weight: 700;">${totalSubjects.size}</div>
+                        <div style="font-size: var(--font-size-sm); opacity: 0.9;">Subjects</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = activeFiltersHtml + summaryHtml + html;
     }
 }
 

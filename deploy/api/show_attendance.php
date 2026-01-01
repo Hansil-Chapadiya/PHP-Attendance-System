@@ -34,7 +34,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     }
 
     // Use prepared statement to get attendance records
-    $stmt = $conn->prepare("SELECT a.attendance_id, a.class_id, a.date, a.status, a.marked_time, c.branch, c.division FROM `attendance` a LEFT JOIN `classes` c ON a.class_id = c.class_id WHERE a.user_id = ? ORDER BY a.date DESC, a.marked_time DESC");
+    $stmt = $conn->prepare("
+        SELECT 
+            a.attendance_id, 
+            a.class_id, 
+            a.date, 
+            a.status, 
+            a.marked_time, 
+            c.branch, 
+            c.division,
+            c.subject,
+            s.semester
+        FROM `attendance` a 
+        LEFT JOIN `classes` c ON a.class_id = c.class_id 
+        LEFT JOIN `students` s ON a.user_id = s.user_id
+        WHERE a.user_id = ? 
+        ORDER BY a.date DESC, a.marked_time DESC
+    ");
     $stmt->bind_param("i", $requested_user_id);
     $stmt->execute();
     $result = $stmt->get_result();
