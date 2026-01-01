@@ -1,4 +1,6 @@
 // Student Dashboard Logic
+let allAttendanceRecords = []; // Store all records for filtering
+
 document.addEventListener('DOMContentLoaded', async () => {
     const auth = checkAuth();
     if (!auth) return;
@@ -14,13 +16,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load Today's Status
     await loadTodayStatus(token);
 
-    // Load Recent Attendance
-    await loadRecentAttendance(token);
+    // Load All Attendance Records
+    await loadAttendanceRecords(token);
+
+    // Load Weekly Schedule
+    await loadWeeklySchedule(token);
 
     // Mark Attendance Button
     document.getElementById('markAttendanceBtn').addEventListener('click', () => {
         window.location.href = 'mark-attendance.html';
     });
+
+    // Attendance filter event listeners
+    const filterSubject = document.getElementById('filterSubject');
+    const filterDate = document.getElementById('filterDate');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    const refreshBtn = document.getElementById('refreshAttendanceBtn');
+    
+    if (filterSubject) {
+        filterSubject.addEventListener('change', () => displayAttendanceRecords(allAttendanceRecords));
+    }
+    if (filterDate) {
+        filterDate.addEventListener('change', () => displayAttendanceRecords(allAttendanceRecords));
+    }
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', () => {
+            if (filterSubject) filterSubject.value = '';
+            if (filterDate) filterDate.value = '';
+            displayAttendanceRecords(allAttendanceRecords);
+        });
+    }
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', async () => {
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<div class=\"spinner\" style=\"width: 16px; height: 16px;\"></div> Refreshing...';
+            await loadAttendanceRecords(token);
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = `
+                <svg class=\"icon\" viewBox=\"0 0 24 24\" style=\"width: 16px; height: 16px;\">\n                    <path d=\"M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15\"/>\n                </svg>\n                Refresh\n            `;
+        });
+    }
 });
 
 // Load User Profile
@@ -176,6 +211,285 @@ async function loadRecentAttendance(token) {
         container.innerHTML = `
             <div style="text-align: center; padding: var(--space-4); color: var(--text-secondary);">
                 Unable to load attendance records
+            </div>
+        `;
+    }
+}
+
+// Load All Attendance Records
+async function loadAttendanceRecords(token) {
+    const container = document.getElementById('attendanceRecords');
+    
+    try {
+        const result = await apiCall('show_attendance.php', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log('📊 Attendance Records Response:', result);
+
+        if (result.data.status === 'success') {
+            const records = result.data.data || [];
+            
+            if (records.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">
+                        <svg class="icon icon-lg" viewBox="0 0 24 24" style="width: 48px; height: 48px; margin: 0 auto var(--space-4);">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p>No attendance records yet</p>
+                        <p style="font-size: var(--font-size-sm); margin-top: var(--space-2);">
+                            Mark your attendance to see records here
+                        </p>
+                    </div>
+                `;
+                allAttendanceRecords = [];
+                return;
+            }
+
+            // Store records globally for filtering
+            allAttendanceRecords = records;
+            
+            // Populate filter dropdowns
+            populateFilters(records);
+            
+            // Display records
+            displayAttendanceRecords(records);
+        } else {
+            throw new Error(result.data.message || 'Failed to load');
+        }
+    } catch (error) {
+        console.error('Attendance load error:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: var(--space-4); color: var(--text-secondary);">
+                <p>Unable to load attendance records</p>
+                <p style="font-size: var(--font-size-sm); margin-top: var(--space-2);">
+                    ${error.message || 'Please try again later'}
+                </p>
+            </div>
+        `;
+    }
+}
+
+// Populate filter dropdowns
+function populateFilters(records) {
+    const subjects = new Set();
+    
+    records.forEach(record => {
+        if (record.subject) subjects.add(record.subject);
+    });
+    
+    // Populate subject filter
+    const subjectSelect = document.getElementById('filterSubject');
+    if (subjectSelect) {
+        subjectSelect.innerHTML = '<option value="">All Subjects</option>';
+        Array.from(subjects).sort().forEach(subject => {
+            subjectSelect.innerHTML += `<option value="${subject}">${subject}</option>`;
+        });
+    }
+}
+
+// Display attendance records with optional filtering
+function displayAttendanceRecords(records) {
+    const container = document.getElementById('attendanceRecords');
+    const filterSubject = document.getElementById('filterSubject')?.value || '';
+    const filterDate = document.getElementById('filterDate')?.value || '';
+    
+    console.log('🎯 Displaying attendance:', {
+        totalRecords: records.length,
+        filters: { subject: filterSubject, date: filterDate }
+    });
+    
+    let filteredRecords = records;
+    
+    // Apply subject filter
+    if (filterSubject) {
+        filteredRecords = filteredRecords.filter(record => record.subject === filterSubject);
+    }
+    
+    // Apply date filter
+    if (filterDate) {
+        filteredRecords = filteredRecords.filter(record => record.date === filterDate);
+    }
+    
+    if (filteredRecords.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">
+                <svg class="icon icon-lg" viewBox="0 0 24 24" style="width: 48px; height: 48px; margin: 0 auto var(--space-4);">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <p style="font-weight: 600; font-size: var(--font-size-lg);">No records match the selected filters</p>
+                <p style="font-size: var(--font-size-sm); margin-top: var(--space-2);">
+                    Try adjusting your filter criteria
+                </p>
+                ${(filterSubject || filterDate) ? `
+                <div style="margin-top: var(--space-4);">
+                    <button onclick="document.getElementById('clearFilters').click()" class="btn btn-primary">
+                        Clear All Filters
+                    </button>
+                </div>
+                ` : ''}
+            </div>
+        `;
+        return;
+    }
+    
+    // Calculate statistics
+    const totalRecords = filteredRecords.length;
+    const uniqueSubjects = new Set(filteredRecords.map(r => r.subject).filter(Boolean)).size;
+    
+    // Active filters banner
+    let activeFiltersHtml = '';
+    const activeFilters = [];
+    if (filterSubject) activeFilters.push(`Subject: ${filterSubject}`);
+    if (filterDate) activeFilters.push(`Date: ${formatDate(filterDate)}`);
+    
+    if (activeFilters.length > 0) {
+        activeFiltersHtml = `
+            <div style="background: var(--info-light); border-left: 4px solid var(--info); padding: var(--space-3); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-weight: 600; margin-right: var(--space-2);">🔍 Active Filters:</span>
+                        ${activeFilters.map(f => `<span class="badge" style="background: var(--info); color: white; margin-right: var(--space-2);">${f}</span>`).join('')}
+                    </div>
+                    <button onclick="document.getElementById('clearFilters').click()" class="btn btn-sm" style="padding: var(--space-1) var(--space-3); font-size: var(--font-size-sm);">
+                        Clear Filters
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Summary banner
+    const summaryHtml = `
+        <div style="background: linear-gradient(135deg, var(--primary-light), var(--primary)); color: white; padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); text-align: center;">
+                <div>
+                    <div style="font-size: var(--font-size-2xl); font-weight: 700;">${totalRecords}</div>
+                    <div style="font-size: var(--font-size-sm); opacity: 0.9;">Total Records</div>
+                </div>
+                <div>
+                    <div style="font-size: var(--font-size-2xl); font-weight: 700;">${uniqueSubjects}</div>
+                    <div style="font-size: var(--font-size-sm); opacity: 0.9;">Subjects</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Build attendance list HTML
+    const attendanceHtml = filteredRecords.map(record => `
+        <div style="border-left: 4px solid var(--primary); padding: var(--space-4); margin-bottom: var(--space-3); background: var(--bg-secondary); border-radius: var(--radius-md);">
+            <div style="margin-bottom: var(--space-3);">
+                <div style="font-weight: 600; font-size: var(--font-size-md); margin-bottom: var(--space-2); color: var(--text-primary);">
+                    ${record.subject || 'No Subject'}
+                </div>
+                <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                    <span class="badge" style="background: var(--success-light); color: var(--success);">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Present
+                    </span>
+                    <span class="badge" style="background: var(--gray-200); color: var(--gray-700);">
+                        Sem ${record.semester || '-'}
+                    </span>
+                    <span class="badge badge-primary">
+                        ${formatDate(record.date)}
+                    </span>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--font-size-sm); color: var(--text-secondary);">
+                <div>
+                    Division ${record.division} • ${record.branch}
+                </div>
+                <div>
+                    ${formatTime(record.marked_time)}
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = activeFiltersHtml + summaryHtml + attendanceHtml;
+}
+
+// Load Weekly Schedule
+async function loadWeeklySchedule(token) {
+    const container = document.getElementById('weeklySchedule');
+    
+    try {
+        const result = await apiCall('get_student_schedule.php', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (result.data.success) {
+            const schedule = result.data.schedule;
+            const division = result.data.division;
+            const semester = result.data.semester;
+            
+            // Check if schedule is empty
+            const hasSchedule = Object.values(schedule).some(day => day.length > 0);
+            
+            if (!hasSchedule) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">
+                        <svg class="icon icon-lg" viewBox="0 0 24 24" style="width: 48px; height: 48px; margin: 0 auto var(--space-4);">
+                            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <p>No schedule available for Division ${division} - Semester ${semester}</p>
+                        <p style="font-size: var(--font-size-sm); margin-top: var(--space-2);">
+                            Contact your admin to add schedule
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Build schedule HTML
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            
+            container.innerHTML = `
+                <div style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-3);">
+                    Division ${division} • Semester ${semester}
+                </div>
+                ${days.map(day => {
+                    const classes = schedule[day] || [];
+                    
+                    if (classes.length === 0) {
+                        return ''; // Skip days with no classes
+                    }
+                    
+                    return `
+                        <div style="margin-bottom: var(--space-4); padding-bottom: var(--space-4); border-bottom: 1px solid var(--border);">
+                            <div style="font-weight: 600; margin-bottom: var(--space-2); color: var(--primary);">
+                                ${day}
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+                                ${classes.map(cls => `
+                                    <div style="background: var(--bg-secondary); padding: var(--space-2) var(--space-3); border-radius: var(--radius); font-size: var(--font-size-sm);">
+                                        <div style="font-weight: 500; margin-bottom: 2px;">${cls.subject}</div>
+                                        ${cls.semester ? `<div style="font-size: var(--font-size-xs); color: var(--success); font-weight: 500;">Semester ${cls.semester}</div>` : ''}
+                                        ${cls.time_slot ? `<div style="font-size: var(--font-size-xs); color: var(--text-secondary);">${cls.time_slot}</div>` : ''}
+                                        ${cls.faculty_name ? `<div style="font-size: var(--font-size-xs); color: var(--text-secondary);">Prof. ${cls.faculty_name}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+        } else {
+            throw new Error('Failed to load schedule');
+        }
+    } catch (error) {
+        console.error('Schedule load error:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: var(--space-4); color: var(--text-secondary);">
+                Unable to load weekly schedule
             </div>
         `;
     }

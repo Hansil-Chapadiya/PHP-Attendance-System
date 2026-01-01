@@ -5,6 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Student</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Custom scrollbar styling */
+        #attendanceRecords::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #attendanceRecords::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+        
+        #attendanceRecords::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        #attendanceRecords::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -90,15 +110,62 @@
             Mark Attendance
         </button>
 
-        <!-- Recent Attendance -->
+        <!-- My Attendance Records -->
         <div class="card mt-8">
             <div class="flex items-center justify-between mb-4">
-                <h3 style="font-size: var(--font-size-lg); font-weight: 600;">Recent Attendance</h3>
-                <a href="attendance-history.html" style="color: var(--primary); text-decoration: none; font-size: var(--font-size-sm);">
-                    View All →
-                </a>
+                <h3 style="font-size: var(--font-size-lg); font-weight: 600;">
+                    <svg class="icon" viewBox="0 0 24 24" style="display: inline; width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;">
+                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    My Attendance Records
+                </h3>
+                <button class="btn btn-outline" id="refreshAttendanceBtn" style="padding: var(--space-2) var(--space-4);">
+                    <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Refresh
+                </button>
             </div>
-            <div id="recentAttendance">
+            
+            <!-- Filters -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md);">
+                <div>
+                    <label class="form-label" style="font-size: var(--font-size-sm); margin-bottom: var(--space-2);">Filter by Subject</label>
+                    <select id="filterSubject" class="form-input" style="width: 100%;">
+                        <option value="">All Subjects</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size: var(--font-size-sm); margin-bottom: var(--space-2);">Filter by Date</label>
+                    <input type="date" id="filterDate" class="form-input" style="width: 100%;">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button id="clearFilters" class="btn btn-outline" style="width: 100%;">Clear Filters</button>
+                </div>
+            </div>
+            
+            <!-- Scrollable Attendance Container -->
+            <div style="max-height: 500px; overflow-y: auto; overflow-x: hidden; border-radius: var(--radius-md); position: relative;">
+                <div id="attendanceRecords">
+                    <!-- Loading skeleton -->
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Schedule / Timetable -->
+        <div class="card mt-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 style="font-size: var(--font-size-lg); font-weight: 600;">
+                    <svg class="icon" viewBox="0 0 24 24" style="display: inline; width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;">
+                        <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Weekly Schedule
+                </h3>
+            </div>
+            <div id="weeklySchedule">
                 <!-- Loading skeleton -->
                 <div class="skeleton skeleton-text"></div>
                 <div class="skeleton skeleton-text"></div>

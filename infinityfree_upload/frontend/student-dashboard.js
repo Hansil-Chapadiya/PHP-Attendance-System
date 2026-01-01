@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load Recent Attendance
     await loadRecentAttendance(token);
 
+    // Load Weekly Schedule
+    await loadWeeklySchedule(token);
+
     // Mark Attendance Button
     document.getElementById('markAttendanceBtn').addEventListener('click', () => {
         window.location.href = 'mark-attendance.html';
@@ -176,6 +179,87 @@ async function loadRecentAttendance(token) {
         container.innerHTML = `
             <div style="text-align: center; padding: var(--space-4); color: var(--text-secondary);">
                 Unable to load attendance records
+            </div>
+        `;
+    }
+}
+
+// Load Weekly Schedule
+async function loadWeeklySchedule(token) {
+    const container = document.getElementById('weeklySchedule');
+    
+    try {
+        const result = await apiCall('get_student_schedule.php', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (result.data.success) {
+            const schedule = result.data.schedule;
+            const division = result.data.division;
+            const semester = result.data.semester;
+            
+            // Check if schedule is empty
+            const hasSchedule = Object.values(schedule).some(day => day.length > 0);
+            
+            if (!hasSchedule) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">
+                        <svg class="icon icon-lg" viewBox="0 0 24 24" style="width: 48px; height: 48px; margin: 0 auto var(--space-4);">
+                            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <p>No schedule available for Division ${division} - Semester ${semester}</p>
+                        <p style="font-size: var(--font-size-sm); margin-top: var(--space-2);">
+                            Contact your admin to add schedule
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Build schedule HTML
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            
+            container.innerHTML = `
+                <div style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-3);">
+                    Division ${division} • Semester ${semester}
+                </div>
+                ${days.map(day => {
+                    const classes = schedule[day] || [];
+                    
+                    if (classes.length === 0) {
+                        return ''; // Skip days with no classes
+                    }
+                    
+                    return `
+                        <div style="margin-bottom: var(--space-4); padding-bottom: var(--space-4); border-bottom: 1px solid var(--border);">
+                            <div style="font-weight: 600; margin-bottom: var(--space-2); color: var(--primary);">
+                                ${day}
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+                                ${classes.map(cls => `
+                                    <div style="background: var(--bg-secondary); padding: var(--space-2) var(--space-3); border-radius: var(--radius); font-size: var(--font-size-sm);">
+                                        <div style="font-weight: 500; margin-bottom: 2px;">${cls.subject}</div>
+                                        ${cls.semester ? `<div style="font-size: var(--font-size-xs); color: var(--success); font-weight: 500;">Semester ${cls.semester}</div>` : ''}
+                                        ${cls.time_slot ? `<div style="font-size: var(--font-size-xs); color: var(--text-secondary);">${cls.time_slot}</div>` : ''}
+                                        ${cls.faculty_name ? `<div style="font-size: var(--font-size-xs); color: var(--text-secondary);">Prof. ${cls.faculty_name}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+        } else {
+            throw new Error('Failed to load schedule');
+        }
+    } catch (error) {
+        console.error('Schedule load error:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: var(--space-4); color: var(--text-secondary);">
+                Unable to load weekly schedule
             </div>
         `;
     }

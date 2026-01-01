@@ -28,14 +28,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $data = json_decode($postData, true);
 
     // Check if required fields are provided
-    if (!isset($data['branch'], $data['division'])) {
+    if (!isset($data['branch'], $data['division'], $data['subject'])) {
         http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => 'Branch and division are required']);
+        echo json_encode(['status' => 'error', 'message' => 'Branch, division, and subject are required']);
         exit;
     }
 
     $branch = $data['branch'];
     $division = $data['division'];
+    $subject = trim($data['subject']);
+    
+    // Validate subject
+    if (empty($subject)) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Subject cannot be empty']);
+        exit;
+    }
+    $subject = trim($data['subject']);
+    
+    // Validate subject
+    if (empty($subject)) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Subject cannot be empty']);
+        exit;
+    }
 
     // Validate branch and division
     $branchValidation = Validator::validateBranch($branch);
@@ -90,8 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $expires_at = date('Y-m-d H:i:s', time() + $session_duration);
 
     // Insert into classes table using prepared statement (use faculty_record_id, not faculty_id which is user_id)
-    $stmt = $conn->prepare("INSERT INTO `classes` (class_id, branch, division, faculty_in_charge, faculty_ip, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssisss", $class_id, $branch, $division, $faculty_record_id, $faculty_ip, $created_at, $expires_at);
+    $stmt = $conn->prepare("INSERT INTO `classes` (class_id, branch, division, subject, faculty_in_charge, faculty_ip, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssisss", $class_id, $branch, $division, $subject, $faculty_record_id, $faculty_ip, $created_at, $expires_at);
 
     if ($stmt->execute()) {
         http_response_code(201);
