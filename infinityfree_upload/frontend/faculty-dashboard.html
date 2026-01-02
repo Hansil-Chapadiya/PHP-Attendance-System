@@ -5,17 +5,307 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Faculty</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Production-Ready Faculty Dashboard */
+        :root {
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 32px;
+            --spacing-xl: 48px;
+        }
+
+        body {
+            background: var(--bg-secondary);
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 0.875rem;
+        }
+
+        /* Main Container */
+        .dashboard-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-md) var(--spacing-sm);
+        }
+
+        /* Sections spacing */
+        .section {
+            margin-bottom: var(--spacing-md);
+        }
+
+        /* Cards */
+        .dashboard-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Welcome Card */
+        .welcome-card {
+            padding: var(--spacing-md);
+        }
+
+        .welcome-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .welcome-subtitle {
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-sm);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Start Session Form */
+        .session-form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        /* Filters */
+        .filters-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        /* Attendance Container */
+        .attendance-scroll-container {
+            max-height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-radius: 6px;
+            margin-top: var(--spacing-sm);
+        }
+
+        .attendance-scroll-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .attendance-scroll-container::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 3px;
+        }
+
+        .attendance-scroll-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .attendance-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+
+        .attendance-scroll-container {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) var(--bg-secondary);
+        }
+
+        /* Active Session */
+        .active-session-card {
+            background: var(--bg-primary);
+            border-color: var(--success);
+        }
+
+        .class-id-box {
+            background: var(--bg-secondary);
+            padding: var(--spacing-md);
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: var(--spacing-sm);
+            border: 2px dashed var(--success);
+        }
+
+        .class-id-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin: 16px 0;
+        }
+
+        .session-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-sm);
+        }
+
+        .info-item p:first-child {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .info-item p:last-child {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Tablet (481px - 768px) */
+        @media (min-width: 481px) {
+            .dashboard-main {
+                padding: var(--spacing-lg) var(--spacing-md);
+            }
+
+            .session-form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .session-form-grid > div:last-child {
+                grid-column: 1 / -1;
+            }
+
+            .filters-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters-container > div:last-child {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* Desktop (769px+) */
+        @media (min-width: 769px) {
+            .header-content {
+                padding: 20px var(--spacing-md);
+            }
+
+            .header-title {
+                font-size: 1.25rem;
+            }
+
+            .dashboard-main {
+                padding: var(--spacing-xl) var(--spacing-md);
+            }
+
+            .section {
+                margin-bottom: var(--spacing-lg);
+            }
+
+            .dashboard-card {
+                padding: var(--spacing-lg);
+            }
+
+            .welcome-card {
+                padding: var(--spacing-lg);
+            }
+
+            .filters-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .filters-container > div:last-child {
+                grid-column: auto;
+            }
+
+            .attendance-scroll-container {
+                max-height: 600px;
+            }
+        }
+
+        /* Large Desktop (1024px+) */
+        @media (min-width: 1024px) {
+            .session-info-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* Touch-friendly buttons on mobile */
+        @media (max-width: 768px) {
+            .btn {
+                min-height: 44px;
+            }
+
+            .section-actions {
+                width: 100%;
+            }
+
+            .section-actions button {
+                flex: 1;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
-    <header style="background: var(--bg-primary); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;">
-        <div class="container" style="padding-top: var(--space-4); padding-bottom: var(--space-4);">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 style="font-size: var(--font-size-lg); font-weight: 600;">Faculty Dashboard</h1>
-                </div>
-                <button class="btn btn-outline" id="logoutBtn" style="padding: var(--space-2) var(--space-4);">
-                    <svg class="icon" viewBox="0 0 24 24">
+    <header class="dashboard-header">
+        <div class="header-content">
+            <h1 class="header-title">Faculty Dashboard</h1>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
+                    <span class="theme-toggle-slider">
+                        <svg class="theme-icon" viewBox="0 0 24 24">
+                            <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </span>
+                </button>
+                <button class="btn btn-outline logout-btn" id="logoutBtn">
+                    <svg class="icon" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
                         <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                     </svg>
                     Logout
@@ -25,184 +315,189 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container container-md" style="padding-top: var(--space-8); padding-bottom: var(--space-8);">
+    <main class="dashboard-main">
         
         <!-- Welcome Section -->
-        <div class="card mb-6">
-            <h2 style="font-size: var(--font-size-2xl); font-weight: 600; margin-bottom: var(--space-2);">
-                Welcome, <span id="facultyName">Professor</span> 👨‍🏫
-            </h2>
-            <p class="text-secondary">Manage attendance sessions for your classes</p>
-        </div>
+        <section class="section">
+            <div class="dashboard-card welcome-card">
+                <h2 class="welcome-title">
+                    Welcome, <span id="facultyName">Professor</span>
+                </h2>
+                <p class="welcome-subtitle">Manage attendance sessions for your classes</p>
+            </div>
+        </section>
 
         <!-- Start New Session -->
-        <div class="card mb-6">
-            <h3 style="font-size: var(--font-size-lg); font-weight: 600; margin-bottom: var(--space-4);">
-                Start Attendance Session
-            </h3>
-            <form id="startSessionForm">
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="form-group" style="margin: 0;">
-                        <label for="branch" class="form-label">Branch</label>
-                        <input 
-                            type="text" 
-                            id="branch" 
-                            class="form-input" 
-                            placeholder="e.g., CS"
-                            required
-                        >
+        <section class="section">
+            <div class="dashboard-card">
+                <h3 class="section-title">Start Attendance Session</h3>
+                <form id="startSessionForm">
+                    <div class="session-form-grid">
+                        <div class="form-group" style="margin: 0;">
+                            <label for="branch" class="form-label">Branch</label>
+                            <input 
+                                type="text" 
+                                id="branch" 
+                                class="form-input" 
+                                placeholder="e.g., CS"
+                                required
+                            >
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label for="division" class="form-label">Division</label>
+                            <input 
+                                type="text" 
+                                id="division" 
+                                class="form-input" 
+                                placeholder="e.g., A"
+                                required
+                            >
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label for="subject" class="form-label">Subject</label>
+                            <input 
+                                type="text" 
+                                id="subject" 
+                                class="form-input" 
+                                placeholder="e.g., Data Structures"
+                                required
+                            >
+                        </div>
                     </div>
-                    <div class="form-group" style="margin: 0;">
-                        <label for="division" class="form-label">Division</label>
-                        <input 
-                            type="text" 
-                            id="division" 
-                            class="form-input" 
-                            placeholder="e.g., A"
-                            required
-                        >
-                    </div>
-                    <div>
-                        <label class="form-label">Subject</label>
-                        <input 
-                            type="text" 
-                            id="subject" 
-                            class="form-input" 
-                            placeholder="e.g., Data Structures"
-                            required
-                        >
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block btn-lg" id="startSessionBtn">
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <path d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Start Session
-                </button>
-            </form>
-        </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="startSessionBtn">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Start Session
+                    </button>
+                </form>
+            </div>
+        </section>
 
         <!-- Alert Message -->
         <div id="alertMessage" style="display: none;"></div>
 
         <!-- Active Session Card -->
-        <div class="card mb-6" id="activeSessionCard" style="display: none; background: #f0fdf4; border-color: #86efac;">
-            <div class="flex items-center justify-between mb-4">
-                <h3 style="font-size: var(--font-size-lg); font-weight: 600;">Active Session</h3>
-                <span class="badge badge-success">
-                    <span class="status-dot status-dot-success"></span>
-                    Live
-                </span>
-            </div>
-            
-            <!-- Class ID Display -->
-            <div style="background: white; padding: var(--space-6); border-radius: var(--radius-md); text-align: center; margin-bottom: var(--space-4); border: 2px dashed var(--success);">
-                <p class="text-secondary mb-2" style="font-size: var(--font-size-sm);">Share this Class ID with students</p>
-                <div style="font-size: var(--font-size-3xl); font-weight: 700; color: var(--primary); letter-spacing: 2px; margin: var(--space-4) 0;" id="classIdDisplay">
-                    -
+        <section class="section" id="activeSessionCard" style="display: none;">
+            <div class="dashboard-card active-session-card">
+                <div class="section-header">
+                    <h3 class="section-title">Active Session</h3>
+                    <span class="badge badge-success">
+                        <span class="status-dot status-dot-success"></span>
+                        Live
+                    </span>
                 </div>
-                <button class="btn btn-outline" id="copyIdBtn" style="font-size: var(--font-size-sm);">
-                    <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-                        <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                    Copy ID
-                </button>
-            </div>
-
-            <!-- Session Info -->
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-secondary" style="font-size: var(--font-size-sm);">Branch</p>
-                    <p style="font-weight: 500;" id="sessionBranch">-</p>
-                </div>
-                <div>
-                    <p class="text-secondary" style="font-size: var(--font-size-sm);">Division</p>
-                    <p style="font-weight: 500;" id="sessionDivision">-</p>
-                </div>
-                <div>
-                    <p class="text-secondary" style="font-size: var(--font-size-sm);">Expires At</p>
-                    <p style="font-weight: 500;" id="sessionExpiry">-</p>
-                </div>
-                <div>
-                    <p class="text-secondary" style="font-size: var(--font-size-sm);">Students Marked</p>
-                    <p style="font-weight: 500; color: var(--success);" id="studentCount">0</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Sessions -->
-        <div class="card">
-            <div class="flex items-center justify-between mb-4">
-                <h3 style="font-size: var(--font-size-lg); font-weight: 600;">
-                    <svg class="icon" viewBox="0 0 24 24" style="display: inline; width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;">
-                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Attendance Records
-                </h3>
-                <div style="display: flex; gap: var(--space-2);">
-                    <button class="btn btn-outline" id="refreshAttendanceBtn" style="padding: var(--space-2) var(--space-4);">
+                
+                <!-- Class ID Display -->
+                <div class="class-id-box">
+                    <p class="text-secondary" style="font-size: 0.875rem; margin-bottom: 8px;">Share this Class ID with students</p>
+                    <div class="class-id-display" id="classIdDisplay">-</div>
+                    <button class="btn btn-outline" id="copyIdBtn" style="font-size: 0.875rem;">
                         <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-                            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                         </svg>
-                        Refresh
-                    </button>
-                    <button class="btn btn-outline" style="padding: var(--space-2) var(--space-4);">
-                        <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-                            <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        Export All
+                        Copy ID
                     </button>
                 </div>
-            </div>
-            
-            <!-- Filters -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); padding: var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md);">
-                <div>
-                    <label class="form-label" style="font-size: var(--font-size-sm); margin-bottom: var(--space-2);">Filter by Division</label>
-                    <select id="filterDivision" class="form-input" style="width: 100%;">
-                        <option value="">All Divisions</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label" style="font-size: var(--font-size-sm); margin-bottom: var(--space-2);">Filter by Subject</label>
-                    <select id="filterSubject" class="form-input" style="width: 100%;">
-                        <option value="">All Subjects</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label" style="font-size: var(--font-size-sm); margin-bottom: var(--space-2);">Filter by Date</label>
-                    <input type="date" id="filterDate" class="form-input" style="width: 100%;">
-                </div>
-                <div style="display: flex; align-items: flex-end;">
-                    <button id="clearFilters" class="btn btn-outline" style="width: 100%;">Clear Filters</button>
-                </div>
-            </div>
-            
-            <div id="attendanceRecords">
-                <!-- Loading skeleton -->
-                <div class="skeleton skeleton-text"></div>
-                <div class="skeleton skeleton-text"></div>
-                <div class="skeleton skeleton-text"></div>
-            </div>
-        </div>
 
-        <!-- Weekly Teaching Schedule -->
-        <div class="card mt-8">
-            <div class="flex items-center justify-between mb-4">
-                <h3 style="font-size: var(--font-size-lg); font-weight: 600;">
-                    <svg class="icon" viewBox="0 0 24 24" style="display: inline; width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;">
+                <!-- Session Info -->
+                <div class="session-info-grid">
+                    <div class="info-item">
+                        <p>Branch</p>
+                        <p id="sessionBranch">-</p>
+                    </div>
+                    <div class="info-item">
+                        <p>Division</p>
+                        <p id="sessionDivision">-</p>
+                    </div>
+                    <div class="info-item">
+                        <p>Expires At</p>
+                        <p id="sessionExpiry">-</p>
+                    </div>
+                    <div class="info-item">
+                        <p>Students Marked</p>
+                        <p style="color: #10b981;" id="studentCount">0</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Attendance Records -->
+        <section class="section">
+            <div class="dashboard-card">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Attendance Records
+                    </h3>
+                    <div class="section-actions">
+                        <button class="btn btn-outline" id="refreshAttendanceBtn">
+                            <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Refresh
+                        </button>
+                        <button class="btn btn-outline">
+                            <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="filters-container">
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label" style="font-size: 0.875rem;">Division</label>
+                        <select id="filterDivision" class="form-input">
+                            <option value="">All Divisions</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label" style="font-size: 0.875rem;">Subject</label>
+                        <select id="filterSubject" class="form-input">
+                            <option value="">All Subjects</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label class="form-label" style="font-size: 0.875rem;">Date</label>
+                        <input type="date" id="filterDate" class="form-input">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button id="clearFilters" class="btn btn-outline" style="width: 100%;">Clear</button>
+                    </div>
+                </div>
+                
+                <!-- Attendance Records List -->
+                <div class="attendance-scroll-container">
+                    <div id="attendanceRecords">
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Teaching Schedule -->
+        <section class="section">
+            <div class="dashboard-card">
+                <h3 class="section-title">
+                    <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
                         <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     My Teaching Schedule
                 </h3>
+                <div id="teachingSchedule">
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text"></div>
+                </div>
             </div>
-            <div id="teachingSchedule">
-                <!-- Loading skeleton -->
-                <div class="skeleton skeleton-text"></div>
-                <div class="skeleton skeleton-text"></div>
-                <div class="skeleton skeleton-text"></div>
-            </div>
-        </div>
+        </section>
     </main>
 
     <script src="app.js"></script>

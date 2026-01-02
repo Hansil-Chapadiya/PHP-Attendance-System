@@ -5,34 +5,334 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Attendance System</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-secondary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .register-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            width: 48px;
+            height: 48px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            z-index: 1000;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .theme-toggle-icon {
+            font-size: 1.25rem;
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 520px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Header */
+        .register-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .register-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .register-header p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Role Selector */
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .role-selector label {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .role-selector input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .role-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 12px 16px;
+            text-align: center;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .role-selector input[type="radio"]:checked + .role-badge {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        }
+
+        .role-badge:hover {
+            border-color: var(--primary);
+            background: var(--bg-secondary);
+        }
+
+        .role-selector input[type="radio"]:checked + .role-badge:hover {
+            background: var(--primary);
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            height: 44px;
+            padding: 0 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9375rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        /* Two Column Layout for Desktop */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        @media (min-width: 481px) {
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Submit Button */
+        .btn-primary {
+            width: 100%;
+            height: 48px;
+            margin-top: 8px;
+            padding: 0 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Footer */
+        .form-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        .form-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .alert.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 480px) {
+            .register-container {
+                padding: 16px;
+            }
+
+            .register-card {
+                padding: 24px;
+            }
+
+            .register-header {
+                margin-bottom: 24px;
+            }
+
+            .register-header h1 {
+                font-size: 1.375rem;
+            }
+
+            .theme-toggle {
+                top: 16px;
+                right: 16px;
+                width: 44px;
+                height: 44px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="form-container">
-            <h1>Create Account</h1>
-            <p class="subtitle">Register for Attendance System</p>
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span class="theme-toggle-icon">🌙</span>
+    </button>
+
+    <div class="register-container">
+        <div class="register-card">
+            <div class="register-header">
+                <h1>Create Account</h1>
+                <p>Register for Attendance System</p>
+            </div>
             
             <div id="alertMessage" class="alert" style="display: none;"></div>
             
-            <form id="registerForm">
-                <!-- User Type Selection -->
+            <form id="registerForm" onsubmit="return false;">
+                <!-- Role Selection -->
                 <div class="role-selector">
                     <label>
                         <input type="radio" name="role" value="student" checked onchange="toggleRoleFields()">
-                        <span class="role-badge student">👨‍🎓 Student</span>
+                        <span class="role-badge">👨‍🎓 Student</span>
                     </label>
                     <label>
                         <input type="radio" name="role" value="faculty" onchange="toggleRoleFields()">
-                        <span class="role-badge faculty">👨‍🏫 Faculty</span>
+                        <span class="role-badge">👨‍🏫 Faculty</span>
                     </label>
                 </div>
 
-                <!-- Common Fields -->
+                <!-- Account Information -->
                 <div class="form-group">
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" required 
-                           placeholder="Enter username (3-50 characters)" minlength="3" maxlength="50">
-                    <small>Only letters, numbers, and underscores allowed</small>
+                           placeholder="Enter username" minlength="3" maxlength="50">
+                    <small>3-50 characters: letters, numbers, underscores only</small>
                 </div>
 
                 <div class="form-group">
@@ -41,11 +341,12 @@
                            placeholder="Enter your full name">
                 </div>
 
+                <!-- Password Fields -->
                 <div class="form-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required 
-                           placeholder="Enter password (min 8 characters)" minlength="8">
-                    <small>Must contain uppercase, lowercase, and number</small>
+                           placeholder="Create password" minlength="8">
+                    <small>Min 8 characters with uppercase, lowercase, and number</small>
                 </div>
 
                 <div class="form-group">
@@ -54,6 +355,7 @@
                            placeholder="Re-enter password">
                 </div>
 
+                <!-- Academic Information -->
                 <div class="form-group">
                     <label for="branch">Branch</label>
                     <select id="branch" name="branch" required>
@@ -69,34 +371,36 @@
 
                 <!-- Student-only Fields -->
                 <div id="studentFields">
-                    <div class="form-group">
-                        <label for="division">Division</label>
-                        <select id="division" name="division">
-                            <option value="">Select Division</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
-                        </select>
-                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="division">Division</label>
+                            <select id="division" name="division">
+                                <option value="">Select Division</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                            </select>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="semester">Semester</label>
-                        <select id="semester" name="semester">
-                            <option value="">Select Semester</option>
-                            <option value="1">1st Semester</option>
-                            <option value="2">2nd Semester</option>
-                            <option value="3">3rd Semester</option>
-                            <option value="4">4th Semester</option>
-                            <option value="5">5th Semester</option>
-                            <option value="6">6th Semester</option>
-                            <option value="7">7th Semester</option>
-                            <option value="8">8th Semester</option>
-                        </select>
+                        <div class="form-group">
+                            <label for="semester">Semester</label>
+                            <select id="semester" name="semester">
+                                <option value="">Select Semester</option>
+                                <option value="1">1st Semester</option>
+                                <option value="2">2nd Semester</option>
+                                <option value="3">3rd Semester</option>
+                                <option value="4">4th Semester</option>
+                                <option value="5">5th Semester</option>
+                                <option value="6">6th Semester</option>
+                                <option value="7">7th Semester</option>
+                                <option value="8">8th Semester</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" id="registerBtn">
+                <button type="submit" class="btn-primary" id="registerBtn">
                     Create Account
                 </button>
 

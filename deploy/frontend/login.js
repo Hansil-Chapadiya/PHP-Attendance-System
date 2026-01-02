@@ -2,18 +2,21 @@
 document.addEventListener('DOMContentLoaded', () => {
     let selectedRole = 'student';
 
-    // Role Selection
+    // Role Selection - Fixed for proper button behavior
     const roleButtons = document.querySelectorAll('.role-btn');
     roleButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             
-            // Remove active from all
+            // Remove active from all buttons
             roleButtons.forEach(b => b.classList.remove('active'));
             
-            // Add active to clicked
-            btn.classList.add('active');
-            selectedRole = btn.dataset.role;
+            // Add active to clicked button
+            this.classList.add('active');
+            selectedRole = this.dataset.role;
+            
+            console.log('Role selected:', selectedRole);
         });
     });
 

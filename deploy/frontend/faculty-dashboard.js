@@ -63,6 +63,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Export button - Professional message
+    const exportBtn = document.querySelectorAll('.btn-outline')[2]; // Third outline button is Export
+    if (exportBtn && exportBtn.textContent.includes('Export')) {
+        exportBtn.addEventListener('click', () => {
+            showAlert('Export functionality is available upon admin approval. Please request access from your administrator.', 'info');
+        });
+    }
+
     // Start Session Form
     const startSessionForm = document.getElementById('startSessionForm');
     const startSessionBtn = document.getElementById('startSessionBtn');

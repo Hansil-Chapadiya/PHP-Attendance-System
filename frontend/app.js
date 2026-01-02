@@ -16,8 +16,33 @@ console.log('API Base URL:', API_BASE_URL);
 const STORAGE_KEYS = {
     TOKEN: 'auth_token',
     USER: 'user_data',
-    ROLE: 'user_role'
+    ROLE: 'user_role',
+    THEME: 'theme_preference'
 };
+
+// ===== THEME MANAGEMENT =====
+// Initialize theme on page load
+(function initTheme() {
+    const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+})();
+
+// Toggle theme function
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem(STORAGE_KEYS.THEME, newTheme);
+}
+
+// Auto-setup theme toggle button if it exists
+document.addEventListener('DOMContentLoaded', () => {
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+});
 
 // Clean InfinityFree response
 function cleanAPIResponse(responseText) {
